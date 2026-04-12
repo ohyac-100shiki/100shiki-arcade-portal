@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>絵文字ローグ（選択成長版）</title>
+<style>
+body{background:#111;color:#fff;font-family:monospace;text-align:center;}
+#game {
+  /* PCなど広い画面では26px（元のサイズ）に固定 */
+  font-size: 26px;
+  line-height: 1.2;
+  white-space: pre;
+  margin: 10px auto;
+  display: inline-block;
+  font-family: "Courier New", Courier, monospace, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Android Emoji"; /* 等幅フォントを明示 */
+  line-height: 1.1; /* 絵文字の上下の隙間が広い場合は少し詰めると綺麗です */
+}
+
+/* 📱 画面の横幅が 800px より小さい場合（スマホ・タブレット） */
+@media screen and (max-width: 800px) {
+  #game {
+    /* 画面の横幅いっぱいに収まるよう、vwで自動調整 */
+    /* 3.1vw は 30文字(W=30)がちょうど収まるくらいの計算です */
+    font-size: 3.1vw; 
+    letter-spacing: -0.05em; /* 絵文字同士の隙間を微調整 */
+  }
+}
+
+#log{margin-top:10px;height:60px;}
+#choice{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.8);
+  display:none;align-items:center;justify-content:center;
+}
+.choiceBox{
+  background:#222;padding:20px;border-radius:10px;
+}
+.choiceBtn{
+  display:block;margin:10px;padding:10px;cursor:pointer;
+  background:#333;border-radius:5px;
+}
+.choiceBtn:hover{background:#555;}
+
+#controls {
+  display:none;
+}
+@media screen and (max-width: 600px) {
+  #controls{
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  /* 📱 指で操作しやすい高さを確保 */
+  height: 200px; 
+  background: #222;
+  border-top: 2px solid #444;
+  /* 👑 Bloggerのどんな要素よりも手前に表示する */
+  z-index: 999999;
+  
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  /* 📱 iPhoneの下のバーを避ける */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 📱 ボタンを大きくして「指」で押しやすくする */
+#controls button {
+  width: 60px;  /* 40-50px以上あると押しやすい */
+  height: 60px;
+  font-size: 24px;
+  cursor: pointer;
+  background: #444;
+  color: white;
+  border: 2px solid #666;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none; /* テキスト選択を防ぐ */
+}
+
+#controls button:active {
+  background: #777; /* 押した時に色が変わるフィードバック */
+}
+
+
+#dpad {
+  display: grid;
+  /* 3列すべて同じ幅(60px)にする。autoではなく固定値が確実です */
+  grid-template-columns: 60px 60px 60px;
+  /* 3行すべて同じ高さ(60px)にする */
+  grid-template-rows: 60px 60px 60px;
+  gap: 5px;
+  /* 枠自体の背景色や角丸をここで設定 */
+  background: #000;
+  padding: 10px;
+  border-radius: 15px;
+  /* 念のため中身を中央寄せにする */
+  justify-items: center;
+  align-items: center;
+}
+
+/* ボタン自体のサイズも固定するとズレません */
+#dpad button {
+  width: 60px;
+  height: 60px;
+  margin: 0; /* 余計な余白を消す */
+}
+
+
+</style>
+</head>
+<body>
+
+<h2>🐤 絵文字ローグ</h2>
+<div>⬅️➡️⬆️⬇️ で移動 [F5]でリトライ</div>
+
+
+<div>
+🏁 <span id="floor"></span>
+⭐ <span id="lv"></span>
+✨ <span id="exp"></span><br>
+❤️ <span id="hp"></span>
+😊 <span id="genki"></span>
+⚔️ <span id="atk"></span>
+🛡️ <span id="def"></span>
+</div>
+
+<div id="game"></div>
+<div id="log"></div>
+
+<div id="choice">
+  <div class="choiceBox" id="choiceBox"></div>
+</div>
+
+<div id="controls">
+  <div id="dpad">
+    <div></div>        <button data-key="up">↑</button>       <div></div>
+    <button data-key="left">←</button>   <div></div>   <button data-key="right">→</button>
+    <div></div>        <button data-key="down">↓</button>    <div></div>
+  </div>
+  
+</div>
+
+
+<script>
+// 画面の横幅が600pxより小さければスマホとみなす
+const isMobile = window.innerWidth < 600;
+
+// スマホなら横18、PCなら横30にする（高さもお好みで調整可能）
+const W = isMobile ? 18 : 40; 
+const H = isMobile ? 15 : 40; 
+
+// 表示する範囲（カメラのサイズ）
+const VIEW_W = isMobile ? 12 : 20; 
+const VIEW_H = isMobile ? 12 : 20; 
+
+// スマホなら「🔲」、PCなら「⬛」にする
+const FLOOR_TILE = isMobile ? "🔲" : "⬛";
+//初期化
+let player={x:1,y:1,hp:20,maxHp:20,genki:100,maxGenki:100,steps:0,atk:5,def:0,exp:0,level:1};
+let floor=1, loop=0;
+
+let map=[],enemies=[],items=[],stairs;
+let logs=[],gameOver=false;
+let lastKilledBy = "";
+let damageMap={};
+let leveling=false;
+let skipEnemyTurn = 0;
+let totalFloor = floor + loop * 25;
+
+
+const gameEl=document.getElementById("game");
+const logEl=document.getElementById("log");
+const hpEl = document.getElementById("hp");
+const genkiEl = document.getElementById("genki"); 
+const atkEl = document.getElementById("atk");
+const defEl = document.getElementById("def");
+const lvEl = document.getElementById("lv");
+const floorEl = document.getElementById("floor");
+const choiceEl=document.getElementById("choice");
+const choiceBox=document.getElementById("choiceBox");
+const expEl = document.getElementById("exp");
+
+//ステータス上昇テーブル
+const playerGrowthTable = {
+  hp: [
+    { maxLevel: 3, value: 5 },
+    { maxLevel: 10, value: 3 },
+    { maxLevel: Infinity, value: 2 }
+  ],
+  atk: [
+    { maxLevel: 3, value: 0 },
+    { maxLevel: 10, value: 1 },
+    { maxLevel: 15, value: 0 },
+    { maxLevel: 20, value: 1 },
+    { maxLevel: 25, value: 0 },
+    { maxLevel: 30, value: 1 },
+    { maxLevel: Infinity, value: 1 },
+    //{ maxLevel: Infinity, value: 2 }
+  ],
+  def: [
+    { maxLevel: 10, value: 0 },
+    { maxLevel: 15, value: 1 },
+    { maxLevel: 18, value: 0 },
+    { maxLevel: 23, value: 1 },
+    { maxLevel: 28, value: 0 },
+    { maxLevel: 33, value: 1 },
+    { maxLevel: Infinity, value: 0 }
+  ],
+};
+
+function getGrowthValue(table, level) {
+  return table.find(t => level <= t.maxLevel).value;
+}
+
+//////
+let currentDisplayLog = ""; // 現在タイピング中の文字列
+let logQueue = [];          // 次に出すログの待ち行列
+let isTyping = false;       // タイピング中かどうかのフラグ
+
+function addLog(m) {
+  logQueue.push(m); // ログを予約リストに入れる
+  if (!isTyping) processNextLog();
+}
+
+async function processNextLog() {
+  if (logQueue.length === 0) return;
+  
+  isTyping = true;
+  let fullMsg = logQueue.shift(); // 次のメッセージを取り出す
+  
+  // 1. 既存のログに追加（表示上の「行」を先に作る）
+  logs.push(""); 
+  if (logs.length > 6) logs.shift();
+
+  // 2. 一文字ずつ「ガチャガチャ」と表示
+  for (let i = 0; i <= fullMsg.length; i++) {
+    logs[logs.length - 1] = fullMsg.substring(0, i);
+    drawLogs(); // ログ画面だけを更新
+    
+    // 文字を出す速度（30ミリ秒 = 0.03秒）
+    await new Promise(resolve => setTimeout(resolve, 16));
+  }
+
+  // 3. 一行出終わったら少しだけ「間」を置く
+  await new Promise(resolve => setTimeout(resolve, 50));
+  
+  isTyping = false;
+  processNextLog(); // 次のログがあれば処理
+}
+
+
+
+function drawLogs(){logEl.innerHTML=logs.join("<br>");}
+
+function needExp(){return player.level*5;}
+
+function emptyMap(){
+  map=[];
+  for(let y=0;y<H;y++){
+    map[y]=[];
+    for(let x=0;x<W;x++) map[y][x]="🌳";
+  }
+}
+
+function room(x,y,w,h){
+  for(let iy=y;iy<y+h;iy++)
+    for(let ix=x;ix<x+w;ix++)
+      map[iy][ix]=FLOOR_TILE;
+}
+
+function connect(a,b){
+  for(let x=Math.min(a.cx,b.cx);x<=Math.max(a.cx,b.cx);x++) map[a.cy][x]=FLOOR_TILE;
+  for(let y=Math.min(a.cy,b.cy);y<=Math.max(a.cy,b.cy);y++) map[y][b.cx]=FLOOR_TILE;
+}
+
+function genDungeon(){
+  emptyMap();
+  let rs=[];
+  for(let i=0;i<6;i++){
+    let w=4+Math.random()*4|0,h=4+Math.random()*4|0;
+    let x=1+Math.random()*(W-w-2)|0,y=1+Math.random()*(H-h-2)|0;
+    let r={x,y,w,h,cx:(x+w/2|0),cy:(y+h/2|0)};
+    room(x,y,w,h);
+    if(rs.length) connect(rs[rs.length-1],r);
+    rs.push(r);
+  }
+  player.x=rs[0].cx;
+  player.y=rs[0].cy;
+  stairs=rs[rs.length-1];
+}
+///ボタン
+function input(key){
+  switch(key){
+    case "up": move(0,-1); break;
+    case "down": move(0,1); break;
+    case "left": move(-1,0); break;
+    case "right": move(1,0); break;
+  
+      break;
+  }
+
+    // 🔹 ここで敵ターンを回す
+    enemyTurn();
+
+  draw();
+}
+
+function randFloor(){
+  while(true){
+    let x=Math.random()*W|0,y=Math.random()*H|0;
+    if(map[y][x]===FLOOR_TILE) return {x,y};
+  }
+}
+
+function spawn(type,pos){
+  let scale = 1 + loop*1.0;
+
+  const base={ //テンプレ"🐛":[8,3,1],
+    "🐛":[8,3,1],
+    "🦇":[5,1,1],
+    "🐝":[8,4,2],
+    "🐍":[12,7,3],
+    "🐒":[32,9,5],
+    "🐢":[55,4,5],
+    "🐻":[60,9,10],
+    "🐉":[250,28,60],
+    "🗿":[300,2,30],
+  };
+
+  let [hp,atk,exp]=base[type];
+
+  return {...pos,
+    hp:Math.floor(hp*scale),
+    atk:Math.floor(atk*scale),
+    type,
+    exp:Math.floor(exp*scale),
+  };
+}
+
+const enemyTable = [
+  { maxFloor: 3,  enemies: [{ type:"🐛", rate:0.8 }, { type:"🐝", rate:0.2 }] },
+  { maxFloor: 6,  enemies: [
+    { type:"🐛", rate:0.5 }, { type:"🐝", rate:0.3 }, { type:"🐍", rate:0.2 },
+  ] },
+  { maxFloor: 9,  enemies: [
+    { type:"🦇", rate:0.5 }, { type:"🐝", rate:0.3 }, { type:"🐍", rate:0.2 },
+  ] },
+  { maxFloor: 12,  enemies: [
+    { type:"🐝", rate:0.5 }, { type:"🐍", rate:0.3 }, { type:"🐢", rate:0.2 },
+  ] },
+  { maxFloor: 15,  enemies: [
+    { type:"🦇", rate:0.5 }, { type:"🐒", rate:0.2 }, { type:"🐢", rate:0.3 },
+  ] },
+  { maxFloor: 18,  enemies: [
+    { type:"🐢", rate:0.5 }, { type:"🐝", rate:0.3 }, { type:"🐻", rate:0.2 },
+  ] },
+  { maxFloor: 21,  enemies: [
+    { type:"🐢", rate:0.5 }, { type:"🐒", rate:0.4 }, { type:"🐻", rate:0.1 },
+  ] },
+  { maxFloor: 24, enemies: [
+      { type:"🐒", rate:0.3 },
+      { type:"🦇", rate:0.3 },
+      { type:"🐢", rate:0.2 },
+      { type:"🐻", rate:0.2 }
+    ]
+  },
+  { maxFloor: Infinity, enemies: [{ type:"🐉", rate:1.0 }] }
+];
+
+function enemyType(){
+  const tier = enemyTable.find(t => floor <= t.maxFloor);
+  if(!tier) return "？"; // 念のため
+
+  const r = Math.random();
+  let sum = 0;
+
+  for(let i=0; i<tier.enemies.length; i++){
+    sum += tier.enemies[i].rate;
+    if(r < sum) return tier.enemies[i].type;
+  }
+
+  // 最後に必ず返す
+  return tier.enemies[tier.enemies.length - 1].type;
+}
+
+
+function getSafeFloor() {
+  let pos;
+  let attempts = 0; // 試行回数をカウント
+  
+  while (attempts < 1000) { // 最大1000回まで探す
+    pos = randFloor();
+    
+    // プレイヤーと階段に重なっていないかチェック
+    const isPlayerPos = (pos.x === player.x && pos.y === player.y);
+    const isStairsPos = (pos.x === stairs.cx && pos.y === stairs.cy);
+
+    if (!isPlayerPos && !isStairsPos) {
+      return pos; // 安全な場所が見つかったら返す
+    }
+    attempts++;
+  }
+  
+  // 1000回探しても見つからなければ、仕方ないのでそのまま返す（フリーズ防止）
+  return pos; 
+}
+
+
+
+function placeEntities(){
+  enemies=[]; items=[];
+
+  //  25階はボス1体だけ
+  if(floor === 25){
+    let pos = randFloor();
+    enemies.push(spawn("🐉", pos));
+    return; // ← これ超重要（他を出さない）
+  }
+
+///通常階層
+//敵出現数=X...(X,3+Math.floor(floor/2))
+  let total=Math.min(12,3+Math.floor(floor/2));
+
+  for (let i = 0; i < total; i++) {
+    let pos;
+    // プレイヤーと重ならない座標が出るまで繰り返す
+    while (true) {
+      pos = randFloor(); // {x: 10, y: 5} のような座標オブジェクトを想定
+      if (pos.x !== player.x || pos.y !== player.y) {
+        break; // 重なってなければOK
+      }
+    }
+    //敵のスポーン
+    enemies.push(spawn(enemyType(), pos));
+}
+
+//ミミックのスポーン
+    const isMimicFloor = (floor % 12 === 0);
+
+if (isMimicFloor && floor % 25 !== 0) { // ボス階（25階）には出さない
+  enemies.push(spawn("🗿", getSafeFloor()));
+  addLog("何か不気味な気配を感じる…");
+  }
+
+// 回復アイテム（毎フロア1〜2個）
+let healCount = Math.random() < 0.3 ? 1 : 0;
+
+for(let i=0; i<healCount; i++){
+  items.push({...getSafeFloor(), type:"🍡"}); // 書き換え
+}
+
+if(floor % 5 === 0){
+  items.push({...getSafeFloor(), type:"🍡"});
+  let itemType = Math.random() < 0.5 ? "⚔️" : "🛡️";
+  items.push({...getSafeFloor(), type: itemType});
+}
+
+if(floor % 20 === 0){
+  items.push({...getSafeFloor(), type:"🍒"});
+}
+
+if(floor % 25 === 0){
+  items.push({...getSafeFloor(), type:"🍒"});
+  items.push({...getSafeFloor(), type:"🍡"});
+}
+
+}
+
+function draw() {
+  // 1. 「プレイヤーがいま何枚目のパネルにいるか」を計算する
+  // プレイヤーの座標を画面サイズで割って、小数点以下を切り捨てる
+  let panelX = Math.floor(player.x / VIEW_W);
+  let panelY = Math.floor(player.y / VIEW_H);
+
+  // 2. カメラの開始位置を「パネルの左上」に固定する
+  let startX = panelX * VIEW_W;
+  let startY = panelY * VIEW_H;
+
+  // 3. マップの端を超えないようにガード（念のため）
+  startX = Math.max(0, Math.min(startX, W - VIEW_W));
+  startY = Math.max(0, Math.min(startY, H - VIEW_H));
+
+  let out = "";
+  // 4. そのパネルの範囲（VIEW_W x VIEW_H）だけを描画
+  for (let y = startY; y < startY + VIEW_H; y++) {
+    for (let x = startX; x < startX + VIEW_W; x++) {
+
+      // --- 描画優先順位（変更なし） ---
+      if (player.x === x && player.y === y) {
+        out += "🐤";
+        continue;
+      }
+
+      let e = enemies.find(e => e.x === x && e.y === y);
+      if (e) {
+        out += e.type;
+        continue;
+      }
+
+      let i = items.find(i => i.x === x && i.y === y);
+      if (i) {
+        out += i.type;
+        continue;
+      }
+
+      if (stairs.cx === x && stairs.cy === y) {
+        out += "🌀";
+        continue;
+      }
+
+      if (map[y] && map[y][x]) {
+        out += map[y][x];
+      } else {
+        out += "🌳";
+      }
+    }
+    out += "\n";
+  }
+
+  // ステータス等の更新
+  gameEl.textContent = out;
+  hpEl.textContent = player.hp + "/" + player.maxHp;
+  genkiEl.textContent = Math.floor(player.genki); 
+  atkEl.textContent = player.atk;
+  defEl.textContent = player.def;
+  lvEl.textContent = player.level;
+  expEl.textContent = `EXP ${player.exp}/${needExp()}`;
+  floorEl.textContent = floor + loop * 25;
+  drawLogs();
+
+  
+}
+
+
+function levelUp(){
+  leveling=true;
+
+  // 🔽 ① 事前に記録
+  let prevHp = player.maxHp;
+  let prevAtk = player.atk;
+  let prevDef = player.def;
+
+  player.level++;
+
+let hpGainBase = getGrowthValue(playerGrowthTable.hp, player.level);
+let atkGainBase = getGrowthValue(playerGrowthTable.atk, player.level);
+let defGainBase = getGrowthValue(playerGrowthTable.def, player.level);
+
+player.maxHp += hpGainBase;
+player.hp += hpGainBase;
+player.atk += atkGainBase;
+player.def += defGainBase;
+
+  // 🔽 ② 差分計算
+  let hpUp = player.maxHp - prevHp;
+  let atkUp = player.atk - prevAtk;
+  let defUp = player.def - prevDef;
+
+  // 🔽 ③ 選択用ランダム
+  let hpGain=1+Math.floor(Math.random()*3); //元は4+Math.floor(Math.random()*3);
+  let atkGain=1+Math.floor(Math.random()*3);
+  let defGain = Math.random() < 0.5 ? 1 : 2;
+
+  // 🔽 ④ 表示（ここが今回の本体）
+// 🔽 ④ 表示用テキストを作る
+let growthText = "";
+
+if (hpUp > 0) {
+  growthText += `❤️ +${hpUp}　`;
+}
+if (atkUp > 0) {
+  growthText += `⚔️ +${atkUp}　`;
+}
+if (defUp > 0) {
+  growthText += `🛡️ +${defUp}　`;
+}
+
+// 🔽 表示
+choiceBox.innerHTML = `
+  <div style="margin-bottom:30px;font-size:14px;color:#fff;
+  font-family: "Courier New", monospace, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";;">
+    
+    ⭐ レベルアップ ⭐<br><br>
+
+    【成長した】<br>
+    ${growthText || "（変化なし）"}<br><br>
+
+    【ボーナスを選択】<br>
+  </div>
+`;
+
+  const choices=[
+    {text:`❤️ +${hpGain}`, action:()=>{
+      player.maxHp+=hpGain;
+      player.hp+=hpGain;
+    }},
+    {text:`⚔️ +${atkGain}`, action:()=>{
+      player.atk+=atkGain;
+    }},
+    {text:`🛡️ +${defGain}`, action:()=>{
+      player.def+=defGain;
+    }}
+  ];
+
+  choices.forEach(c=>{
+    let btn=document.createElement("div");
+    btn.className="choiceBtn";
+    btn.textContent=c.text;
+    btn.onclick=()=>{
+      c.action();
+
+      // 🔽 ⑤ ログにも出すと気持ちいい
+      addLog(`✨LvUP！ ${growthText || "（変化なし）"} ボーナス ${c.text}`);
+
+      choiceEl.style.display="none";
+      leveling=false;
+      draw();
+    };
+    choiceBox.appendChild(btn);
+  });
+
+  choiceEl.style.display="flex";
+}
+
+function showResult(){
+  let totalFloor = floor + loop * 25;
+
+  let deathMessage = "";
+  if (player.genki <= 0) {
+    deathMessage = `Floor ${totalFloor} で 歩き疲れて力尽きた`;
+  } else {
+    deathMessage = `Floor ${totalFloor} で ${lastKilledBy} に倒された`;
+  }
+
+  // 背景の暗転を無効化し、表示位置を右上に固定するスタイル調整
+  choiceEl.style.backgroundColor = "transparent"; // 背景を暗くしない
+  choiceEl.style.alignItems = "flex-start";       // 上端に寄せる
+  choiceEl.style.justifyContent = "flex-end";     // 右端に寄せる
+  choiceEl.style.padding = "20px";                // 端に余白を作る
+
+  choiceBox.innerHTML = `
+    <div style="background: rgba(0,0,0,0.85); padding: 15px; border-radius: 8px; border: 2px solid #555; color: #fff; text-align: left; font-size: 14px; line-height: 1.6;">
+      <div style="font-size:18px; font-weight:bold; color: #ff4444; margin-bottom: 8px;">💀 GAME OVER</div>
+      ${deathMessage}<br>
+      <hr style="border: 0; border-top: 1px solid #444; margin: 10px 0;">
+      【最終ステータス】<br>
+      ⭐ Lv ${player.level} ❤️ ${player.hp}/${player.maxHp} 😊${Math.floor(player.genki)} ⚔️ ${player.atk} 🛡️ ${player.def}<br><br>
+      <div style="display: flex; gap: 10px;">
+        <button onclick="tweet()" style="cursor:pointer; flex: 1; padding: 5px;">Xで共有</button>
+        <button onclick="location.reload()" style="cursor:pointer; flex: 1; padding: 5px;">リトライ</button>
+      </div>
+    </div>
+  `;
+  
+  choiceEl.style.display="flex";
+}
+
+
+function tweet(){
+  const text = `【🐤絵文字ローグ】
+到達フロア Floor ${floor} で ${lastKilledBy} に倒された
+⭐ Lv:${player.level} ⚔️${player.atk} 🛡️${player.def}
+
+#インディーゲーム #ブラウザゲーム`;
+
+  const url = "https://x.com/intent/post?text=" + encodeURIComponent(text);
+  window.open(url, "_blank");
+}
+
+function pAtk(e){
+  let dmg = player.atk;
+let crit = Math.random() < 0.2;
+
+if(crit) dmg *= 2;
+
+e.hp -= dmg;
+
+addLog(`${crit ? "✨クリティカル！ " : ""}🐤の攻撃！${e.type}に💥${dmg}`);
+
+  if(e.hp<=0){ //撃破
+
+
+    
+    addLog(`${e.type}を倒した！EXP✨ ${e.exp} 獲得！`);
+   
+    enemies=enemies.filter(x=>x!==e);
+    player.exp+=e.exp;
+    if(player.exp>=needExp()){
+      player.exp -= needExp();
+      levelUp();
+    }
+
+if(e.type === "🐛"){
+  if (Math.random() < 0.3){
+  items.push({
+    x: e.x,
+    y: e.y,
+    type: "🍒"
+  });
+  addLog("🍒を落とした！");
+}
+}
+
+if(e.type === "🐍"){
+  if(Math.random() < 0.2){
+  items.push({
+    x: e.x,
+    y: e.y,
+    type: "🍒"
+  });
+  addLog("🍒を落とした！");
+}
+}
+
+if(e.type === "🦇"){
+  if(Math.random() < 0.2){
+  items.push({
+    x: e.x,
+    y: e.y,
+    type: "🍒"
+  });
+  addLog("🍒を落とした！");
+}
+}
+
+if(e.type === "🐒"){
+  if(Math.random() < 0.1){
+  items.push({
+    x: e.x,
+    y: e.y,
+    type: "⚔️"
+  });
+  addLog("⚔️を落とした！");
+}
+}
+
+if(e.type === "🐢"){
+  if(Math.random() < 0.3){
+    let dropType = (Math.random() < 0.5) ? "🍒" : "🛡️";
+  items.push({
+    x: e.x,
+    y: e.y,
+    type:dropType
+  });
+  addLog(`${dropType}を落とした！`);
+}
+}
+
+if(e.type === "🐻"){
+  if(Math.random() < 0.3){
+    let dropType = (Math.random() < 0.5) ? "⚔️" : "🍡";
+  items.push({
+    x: e.x,
+    y: e.y,
+    type:dropType
+  });
+  addLog(`${dropType}を落とした！`);
+}
+}
+
+if(e.type === "🐉"){
+  items.push({
+    x: e.x,
+    y: e.y,
+    type: "💠"
+  });
+  addLog("💠を落とした！");
+}
+
+if(e.type === "🗿"){
+  if(Math.random() < 0.3){
+    items.push({
+    x: e.x,
+    y: e.y,
+    type: "💠"
+  });
+  addLog("🗿の中から神秘的な💠を見つけた！");
+}else {
+    items.push({ x: e.x, y: e.y, type: "🛡️" }); // ハズレでも強化
+    addLog("🗿の台座から🛡️を見つけた！");
+  }
+}
+
+// 🐝の召喚
+if(e.type === "🐝"){
+
+let pos = randFloor();
+
+enemies.push({
+  x: pos.x,
+  y: pos.y,
+  hp: 4,
+  atk: 2,
+  type: "🦇",
+  exp: 2
+});
+
+addLog("🐝が仲間を呼んだ！");
+}
+
+  }
+}
+
+function eAtk(e){
+
+// 防御を割合軽減に変更
+let reduction = player.def / (player.def + 30);
+let dmg = Math.max(1, Math.floor(e.atk * (1 - reduction)));
+
+player.hp-=dmg;
+damageMap[e.type]=(damageMap[e.type]||0)+dmg;
+
+if(player.hp<=0){ //死亡
+  gameOver=true;
+  lastKilledBy = e.type;
+  //addLog("💀 GAME OVER");
+
+  showResult();
+}
+}
+
+function move(dx,dy){
+   let nx = player.x + dx, ny = player.y + dy;
+
+  // 1. 壁にぶつかった時の処理
+  if (map[ny][nx] === "🌳") {
+    addLog("🌳 があって通れない…");
+    return false;}
+
+  //歩数カウント
+  player.steps ++;
+
+  // 10歩ごとに回復かダメージを判定
+  if (player.steps % 10 === 0) {
+    if (player.genki > 0) {
+      // 元気があれば回復
+      if (player.hp < player.maxHp) {
+        player.hp++;
+      }
+    } else {
+      // 元気がなければダメージ
+      player.hp--;
+      addLog("🐤の元気がなくなった…");
+    }
+  }
+
+  // 元気を減らす（0未満にはしない）
+  player.genki = Math.max(0, player.genki - 0.1);
+
+  // 死亡判定
+  if (player.hp <= 0) {
+    player.hp = 0;
+    gameOver = true;
+    showResult();
+  }
+
+  let e=enemies.find(e=>e.x===nx&&e.y===ny);
+  if(e){
+    pAtk(e);
+    //if(e.hp>0) eAtk(e);
+  }else{
+    player.x=nx;player.y=ny;
+  }
+
+  let i=items.find(i=>i.x===player.x&&i.y===player.y);
+  if(i){
+  switch(i.type){
+    case "⚔️":
+    player.atk++;
+     addLog("⚔️を拾った！攻撃力+1");
+     break;
+
+    case "🛡️":
+      player.def++;
+     addLog("🛡️を拾った！防御力+1");
+     break;
+
+    case "🍡":
+      let heal = Math.floor(player.maxHp * 0.15) + 2; //割合回復
+      player.hp=Math.min(player.maxHp,player.hp+heal);
+      addLog("🍡で回復！❤️ +"+heal);
+      break;
+      
+    case "🍒":
+    player.genki = Math.min(player.maxGenki, player.genki + 10);
+    addLog("🍒で元気になった！😊 +10");
+    break;
+    
+    case "💠":
+    let superHealHP = Math.floor(player.maxHp * 0.5); //割合回復
+    let superHealGenki = Math.floor(player.maxGenki * 0.5); //割合回復
+    player.hp=Math.min(player.maxHp,player.hp+superHealHP);
+    player.genki = Math.min(player.maxGenki, player.genki + superHealGenki);
+    addLog("💠の不思議な力で癒された！❤️と😊が大きく回復した！");
+    break;
+  }
+}
+
+  // 
+  items = items.filter(item => item !== i);
+
+  if(player.x===stairs.cx&&player.y===stairs.cy){
+    floor++;
+    if(floor>25){
+      floor=1;
+      loop++;
+    }
+    genDungeon();
+    placeEntities();
+    
+    skipEnemyTurn = 1;
+
+    return true;
+  }
+
+  return true;
+}
+
+function enemyTurn(){
+
+  if(skipEnemyTurn > 0){
+  skipEnemyTurn--;
+  return;
+}
+
+for(let e of enemies){
+
+  let dx = Math.sign(player.x - e.x);
+    let dy = Math.sign(player.y - e.y);
+
+    // 隣接しているか判定
+    let isAdjacent = (Math.abs(player.x - e.x) <= 1 && Math.abs(player.y - e.y) <= 1);
+
+    if (e.type === "🗿" && !isAdjacent) {
+      continue; // 🗿かつ隣にいないなら何もしない
+    }
+
+let moves = (e.type === "🦇") ? 2 : 1;
+let movedTwice = false; // ← 追加
+
+for(let i=0;i<moves;i++){
+
+  let dx=Math.sign(player.x-e.x);
+  let dy=Math.sign(player.y-e.y);
+
+  let nx=e.x+dx,ny=e.y+dy;
+
+  if(nx===player.x && ny===player.y){
+    eAtk(e);
+    break;
+  }
+
+  if(map[ny][nx]==="🌳") break;
+  if(enemies.some(o=>o!==e&&o.x===nx&&o.y===ny)) break;
+
+  e.x=nx;
+  e.y=ny;
+
+  if(i===1){ // ← 2回目の移動が成功した
+    movedTwice = true;
+  }
+
+// 👇ここで判定してログ
+if(e.type === "🦇" && movedTwice){
+  addLog("🦇が素早く動いた！");
+}
+
+  if(nx===player.x && ny===player.y){
+    eAtk(e);
+    break; // 攻撃したらそのターン終了
+  }
+
+  if(map[ny][nx]==="🌳") break;
+  if(enemies.some(o=>o!==e&&o.x===nx&&o.y===ny)) break;
+
+  e.x=nx;
+  e.y=ny;
+}
+}
+
+  for(let type in damageMap){
+    addLog(type+"の攻撃！🐤に💥"+damageMap[type] );
+  }
+  damageMap={};
+}
+
+document.addEventListener("keydown", e => {
+  if (gameOver || leveling) return;
+
+  logs = []; 
+
+  let acted = false;
+  // WASDと矢印キーの両方に対応
+  if (e.key === "ArrowUp"    || e.key === "w" || e.key === "W") acted = move(0, -1);
+  if (e.key === "ArrowDown"  || e.key === "s" || e.key === "S") acted = move(0, 1);
+  if (e.key === "ArrowLeft"  || e.key === "a" || e.key === "A") acted = move(-1, 0);
+  if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") acted = move(1, 0);
+
+  if (acted) {
+    enemyTurn();
+    draw();
+  }
+});
+
+
+function init(){
+  genDungeon();
+  placeEntities();
+  draw();
+}
+
+init();
+
+// スマホボタン入力をinput関数に統一
+document.querySelectorAll("#dpad button, #actionBtns button").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    logs = []; //ログをリセット
+    const key = btn.dataset.key;
+    switch(key){
+      case "up": move(0,-1); break;
+      case "down": move(0,1); break;
+      case "left": move(-1,0); break;
+      case "right": move(1,0); break;
+    }
+    
+    enemyTurn(); // 移動後に敵ターンを回す
+    draw();      // マップ更新
+  });
+});
+
+</script>
+</body>
+</html>
