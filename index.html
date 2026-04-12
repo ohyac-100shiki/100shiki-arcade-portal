@@ -3,82 +3,283 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>100shiki Arcade - 自作ブラウザゲーム集</title>
+    <title>100shiki Arcade</title>
     <style>
         body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f0f2f5;
+            font-family: "Motiva Sans", Arial, "Hiragino Kaku Gothic ProN", sans-serif;
+            background-color: #1b2838;
+            background-image: radial-gradient(circle at top, #2a475e 0%, #1b2838 100%);
+            background-attachment: fixed;
+            color: #c7d5e0;
             margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            color: #333;
+            min-height: 100vh;
         }
+
         header {
-            background-color: #2c3e50;
-            width: 100%;
-            padding: 40px 0;
-            text-align: center;
-            color: white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 1200px;
+            padding: 30px 0 10px 0;
+            text-align: left;
         }
-        h1 { margin: 0; font-size: 2.5rem; letter-spacing: 2px; }
-        .container {
-            max-width: 900px;
-            width: 95%;
-            margin-top: 40px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+
+        .header-top {
+            display: flex;
+            align-items: baseline;
+            gap: 15px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: #fff;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .sub-title {
+            color: #66c0f4;
+            font-size: 0.75rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            opacity: 0.6;
+        }
+
+        .nav-menu {
+            display: flex;
             gap: 25px;
-            padding-bottom: 50px;
+            margin-top: 15px;
+            padding: 0;
+            list-style: none;
         }
+
+        /* リンクではなくボタンとして機能させる */
+        .nav-item {
+            cursor: pointer;
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            opacity: 0.5;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            opacity: 1;
+        }
+
+        .nav-item::after {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #66c0f4;
+            transition: 0.3s;
+        }
+
+        .nav-item:hover::after, .nav-item.active::after {
+            width: 100%;
+        }
+
+        /* コンテンツ表示エリア */
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            padding: 20px 0 100px 0;
+        }
+
+        /* 各カテゴリのリスト：初期は非表示 */
+        .category-content {
+            display: none;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        /* activeクラスがついているものだけ表示 */
+        .category-content.active {
+            display: grid;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .game-card {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            transition: transform 0.3s ease;
+            background: #16202d;
+            border-radius: 4px;
+            overflow: hidden;
             text-decoration: none;
             color: inherit;
-            border: 2px solid transparent;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
         }
+
         .game-card:hover {
-            transform: translateY(-10px);
-            border-color: #3498db;
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            border-color: #66c0f4;
         }
-        .icon { font-size: 3rem; margin-bottom: 15px; display: block; }
-        .game-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 10px; color: #2c3e50; }
-        .game-desc { font-size: 0.9rem; color: #666; line-height: 1.6; }
-        footer { margin-top: auto; padding: 20px; color: #999; font-size: 0.8rem; }
+
+        .thumb-area {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, #2a475e 0%, #16202d 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .thumb-placeholder {
+            font-size: 4rem;
+            filter: drop-shadow(0 0 10px rgba(102, 192, 244, 0.3));
+        }
+
+        .info-area {
+            padding: 20px;
+            background: linear-gradient(180deg, rgba(42, 71, 94, 0.3) 0%, rgba(22, 32, 45, 1) 100%);
+            flex-grow: 1;
+        }
+
+        .game-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .game-desc {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #acb2b8;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .play-status {
+            display: inline-block;
+            margin-top: 15px;
+            font-size: 0.65rem;
+            background: #4c6b22;
+            color: #beee11;
+            padding: 4px 10px;
+            border-radius: 2px;
+            font-weight: bold;
+        }
+
+        footer {
+            margin-top: auto;
+            padding: 40px;
+            color: #3d4a54;
+            font-size: 0.75rem;
+            width: 100%;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>100shiki Arcade</h1>
-        <p>自作ブラウザゲーム・ポータルサイト</p>
+        <div class="header-top">
+            <h1>100shiki Arcade</h1>
+            <span class="sub-title">EXPLORE THE COLLECTION</span>
+        </div>
+        
+        <nav class="nav-menu">
+            <!-- data-category属性で、表示したいコンテンツのIDを指定します -->
+            <div class="nav-item active" data-category="cat-all">すべて</div>
+            <div class="nav-item" data-category="cat-game">ゲーム</div>
+            <div class="nav-item" data-category="cat-typing">タイピング</div>
+            <!-- <a href="https://x.com..." class="nav-item" target="_blank">Twitter</a> -->
+        </nav>
     </header>
 
     <div class="container">
-        <!-- タイピングゲームへのリンク -->
-        <a href="./typing-47/" class="game-card">
-            <span class="icon">⌨️</span>
-            <div class="game-title">47都道府県タイピング</div>
-            <div class="game-desc">日本の全47都道府県を素早く正確に入力！練習モードとクイズモードを搭載しています。</div>
-        </a>
+        <!-- 「すべて」カテゴリ -->
+        <div id="cat-all" class="category-content active">
+            <!-- 47都道府県タイピング -->
+            <a href="./typing-47/" class="game-card">
+                <div class="thumb-area"><span class="thumb-placeholder">⌨️</span></div>
+                <div class="info-area">
+                    <div class="game-title">47都道府県タイピング</div>
+                    <div class="game-desc">日本の全47都道府県を素早く入力！</div>
+                    <div class="play-status">PLAYABLE</div>
+                </div>
+            </a>
+            <!-- 絵文字ローグ -->
+            <a href="./EmojiRogue/" class="game-card">
+                <div class="thumb-area"><span class="thumb-placeholder">⚔️</span></div>
+                <div class="info-area">
+                    <div class="game-title">絵文字ローグ</div>
+                    <div class="game-desc">絵文字で描かれた世界を探索するローグライクRPG。</div>
+                    <div class="play-status">PLAYABLE</div>
+                </div>
+            </a>
+        </div>
 
-        <!-- 絵文字ローグへのリンク -->
-        <a href="./EmojiRogue/index.html" class="game-card">
-            <span class="icon">⚔️</span>
-            <div class="game-title">絵文字ローグ</div>
-            <div class="game-desc">絵文字で描かれた世界を探索するローグライクゲーム。ブラウザで手軽に冒険が楽しめます。</div>
-        </a>
+        <!-- 「ゲーム」カテゴリ -->
+        <div id="cat-game" class="category-content">
+            <a href="./EmojiRogue/index.html" class="game-card">
+                <div class="thumb-area"><span class="thumb-placeholder">⚔️</span></div>
+                <div class="info-area">
+                    <div class="game-title">絵文字ローグ</div>
+                    <div class="game-desc">ゲームカテゴリのコンテンツです。</div>
+                    <div class="play-status">PLAYABLE</div>
+                </div>
+            </a>
+        </div>
+
+        <!-- 「タイピング」カテゴリ -->
+        <div id="cat-typing" class="category-content">
+            <a href="./typing-47/index.html" class="game-card">
+                <div class="thumb-area"><span class="thumb-placeholder">⌨️</span></div>
+                <div class="info-area">
+                    <div class="game-title">47都道府県タイピング</div>
+                    <div class="game-desc">タイピングカテゴリのコンテンツです。</div>
+                    <div class="play-status">PLAYABLE</div>
+                </div>
+            </a>
+        </div>
     </div>
 
     <footer>
-        &copy; 2024 100shiki Arcade. Built with Cursor.
+        &copy; 2024 100shiki Arcade.
     </footer>
 
+    <script>
+        // カテゴリ切り替えの処理
+        const navItems = document.querySelectorAll('.nav-item[data-category]');
+        const contents = document.querySelectorAll('.category-content');
+
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                // 1. すべてのメニューからactiveを消し、クリックしたやつにつける
+                navItems.forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+
+                // 2. すべてのコンテンツを一旦非表示にし、対象のカテゴリだけ表示
+                const targetId = item.getAttribute('data-category');
+                contents.forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === targetId) {
+                        content.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>
