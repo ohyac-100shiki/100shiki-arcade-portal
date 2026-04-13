@@ -32,11 +32,11 @@
         }
 
         .header-top h1 {
-    font-family: 'Courier New', Courier, monospace; /* プログラミング風 */
-    font-size: 1.0rem; /* あえて小さく */
-    letter-spacing: 0.1em; /* 文字間隔を広げて存在感を薄める */
-    text-transform: lowercase; /* 全て小文字で「未完成感」を出す */
-    color: rgba(255, 255, 255, 0.3); /* かなり薄めの白 */
+    font-family: 'Courier New', Courier, monospace; 
+    font-size: 1.0rem; 
+    letter-spacing: 0.1em; 
+    text-transform: lowercase; 
+    color: rgba(255, 255, 255, 0.3); 
 }
 
         h1 {
@@ -196,6 +196,17 @@
             width: 100%;
             text-align: center;
         }
+        footer a {
+    color: inherit; /* 文字色を親要素（薄い白）に合わせる */
+    text-decoration: none; /* 下線を消す */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* 控えめな下線 */
+    transition: 0.3s;
+}
+
+footer a:hover {
+    color: rgba(255, 255, 255, 0.8); /* マウスホバーで少し光る */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+}
     </style>
 </head>
 <body>
@@ -264,7 +275,7 @@
     </div>
 
     <footer>
-        &copy; 2026 prot-0100 arcade.
+        <p>&copy; 2026 prot-0100 arcade. // <a href="/privacy">privacy policy</a> // <a href="https://forms.gle/PRHQvCv9Bw78JMbTA" target="_blank">system report</a></p>
     </footer>
 
     <script>
