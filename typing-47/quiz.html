@@ -23,12 +23,21 @@
 
 /* 地図を中央に配置 */
 #map-container {
-    width: 80%;       /* 画面幅に合わせて調整 */
-    max-height: 75vh; /* 画面の高さ60%までに抑える */
+    width: 80%;
+    /* 75vhだとヘッダー分（約50px）を加味して少し大きいので、少し削ります */
+    max-height: 65vh; 
     display: flex;
     justify-content: center;
+    
+    /* ヘッダーの下に潜り込まないように、上の余白を確保 */
+    margin-top: 60px; 
     margin-bottom: 20px;
+    
+    /* 縮小して余白を作りたい場合は以下を追記 */
+    transform: scale(0.95); 
+    transform-origin: center top;
 }
+
 
 svg {
     width: auto;
@@ -137,6 +146,13 @@ svg {
     </style>
 </head>
 <body>
+  <!-- Header topに戻る -->
+  <div style="position: fixed; top: 0; left: 0; width: 100%; background: #1b2838; padding: 10px 20px; display: flex; justify-content: space-between; border-bottom: 1px solid #66c0f4; font-family: sans-serif; z-index: 99999; box-sizing: border-box; align-items: center;">
+    <a href="../" style="color: #66c0f4; text-decoration: none; font-weight: light;">TOPに戻る</a>
+    <span style="color: rgba(255,255,255,0.3); font-family: 'Courier New', Courier, monospace; font-size: 1rem; letter-spacing: 0.1px; text-transform: lowercase; white-space: nowrap;">prot-0100 arcade</span>
+</div>
+
+<div style="height: 40px;"></div>
  <!-- 左側の広告枠 
   <div class="ad-fixed-side" style="left: 10px;">
     <div style="width:160px; height:600px; background:#ddd; writing-mode:vertical-rl; padding:10px;">広告スペース（左）</div>
