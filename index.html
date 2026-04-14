@@ -219,7 +219,7 @@ footer a:hover {
         
         <nav class="nav-menu">
             <!-- data-category属性で、表示したいコンテンツのIDを指定します -->
-            <div class="nav-item active" data-category="cat-all">すべて</div>
+            <div class="nav-item active" data-category="cat-all">TOP</div>
             <div class="nav-item" data-category="cat-game">ゲーム</div>
             <div class="nav-item" data-category="cat-typing">タイピング</div>
             <div class="nav-item" data-category="cat-guide">攻略</div>
@@ -228,7 +228,7 @@ footer a:hover {
     </header>
 
     <div class="container">
-        <!-- 「すべて」カテゴリ -->
+        <!-- 「TOP」カテゴリ -->
         <div id="cat-all" class="category-content active">
             <!-- 47都道府県タイピング -->
             <a href="./typing-47/" class="game-card">
@@ -301,11 +301,11 @@ footer a:hover {
 
         navItems.forEach(item => {
             item.addEventListener('click', () => {
-                // 1. すべてのメニューからactiveを消し、クリックしたやつにつける
+                // 1. TOPのメニューからactiveを消し、クリックしたやつにつける
                 navItems.forEach(nav => nav.classList.remove('active'));
                 item.classList.add('active');
 
-                // 2. すべてのコンテンツを一旦非表示にし、対象のカテゴリだけ表示
+                // 2. TOPのコンテンツを一旦非表示にし、対象のカテゴリだけ表示
                 const targetId = item.getAttribute('data-category');
                 contents.forEach(content => {
                     content.classList.remove('active');
