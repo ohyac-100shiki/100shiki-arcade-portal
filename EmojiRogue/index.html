@@ -195,6 +195,13 @@ let leveling=false;
 let skipEnemyTurn = 0;
 let totalFloor = floor + loop * 25;
 
+// 効果音の読み込み（ファイルのパスを指定）
+const itemSound = new Audio('getitem.mp3');
+const hitSound  = new Audio('hit.mp3');
+const getHitSound = new Audio('gethit.mp3');
+const gameOverSound = new Audio('gameover.mp3');
+const stairsSound = new Audio('stairs.mp3');
+const levelUpSound = new Audio('levelup.mp3');
 
 const gameEl=document.getElementById("game");
 const logEl=document.getElementById("log");
@@ -562,6 +569,10 @@ function draw() {
 
 function levelUp(){
   leveling=true;
+  //Soound
+  levelUpSound.currentTime = 0;
+  levelUpSound.volume = 0.3;
+  levelUpSound.play();
 
   // 🔽 ① 事前に記録
   let prevHp = player.maxHp;
@@ -636,6 +647,10 @@ choiceBox.innerHTML = `
     btn.textContent=c.text;
     btn.onclick=()=>{
       c.action();
+      //aiueo
+      itemSound.currentTime = 0;
+    itemSound.volume = 0.1;
+    itemSound.play();
 
       // 🔽 ⑤ ログにも出すと気持ちいい
       addLog(`✨LvUP！ ${growthText || "（変化なし）"} ボーナス ${c.text}`);
@@ -840,6 +855,12 @@ damageMap[e.type]=(damageMap[e.type]||0)+dmg;
 
 if(player.hp<=0){ //死亡
   gameOver=true;
+  setTimeout(() => {
+  gameOverSound.currentTime = 0;
+  gameOverSound.volume = 0.3;
+  gameOverSound.play();
+  }, 200);
+
   lastKilledBy = e.type;
   //addLog("💀 GAME OVER");
 
@@ -849,6 +870,10 @@ if(player.hp<=0){ //死亡
 
 function move(dx,dy){
    let nx = player.x + dx, ny = player.y + dy;
+
+   // --- 音を鳴らすためのフラグを用意 ---
+  let hasAttacked = false;
+  let hasGotItem = false;
 
   // 1. 壁にぶつかった時の処理
   if (map[ny][nx] === "🌳") {
@@ -885,6 +910,7 @@ function move(dx,dy){
   let e=enemies.find(e=>e.x===nx&&e.y===ny);
   if(e){
     pAtk(e);
+    hasAttacked = true;
     //if(e.hp>0) eAtk(e);
   }else{
     player.x=nx;player.y=ny;
@@ -892,6 +918,7 @@ function move(dx,dy){
 
   let i=items.find(i=>i.x===player.x&&i.y===player.y);
   if(i){
+    hasGotItem = true; //
   switch(i.type){
     case "⚔️":
     player.atk++;
@@ -922,6 +949,7 @@ function move(dx,dy){
     addLog("💠の不思議な力で癒された！❤️と😊が大きく回復した！");
     break;
   }
+  
 }
 
   // 
@@ -929,6 +957,10 @@ function move(dx,dy){
 
   if(player.x===stairs.cx&&player.y===stairs.cy){
     floor++;
+    stairsSound.currentTime = 0;
+    stairsSound.volume = 0.3;
+    stairsSound.play();
+
     if(floor>25){
       floor=1;
       loop++;
@@ -940,6 +972,16 @@ function move(dx,dy){
 
     return true;
   }
+
+  if (hasAttacked) {
+    hitSound.currentTime = 0;
+    hitSound.volume = 0.3;
+    hitSound.play();
+  } else if (hasGotItem) {
+    itemSound.currentTime = 0;
+    itemSound.volume = 0.1;
+    itemSound.play();
+  } 
 
   return true;
 }
@@ -975,6 +1017,12 @@ for(let i=0;i<moves;i++){
 
   if(nx===player.x && ny===player.y){
     eAtk(e);
+    //効果音再生
+    setTimeout(() => {
+        getHitSound.currentTime = 0;
+        getHitSound.volume = 0.15;
+        getHitSound.play();
+    }, 100);
     break;
   }
 
