@@ -207,6 +207,85 @@ footer a:hover {
     color: rgba(255, 255, 255, 0.8); /* マウスホバーで少し光る */
     border-bottom: 1px solid rgba(255, 255, 255, 0.5);
 }
+
+
+/* 横並びの親レイアウト */
+.main-layout {
+    display: flex;
+    width: 90%;
+    max-width: 1200px;
+    gap: 20px;
+    margin-top: 20px;
+    align-items: flex-start; /* 広告が伸びるのを防ぐ */
+}
+
+/* 左側のコンテンツエリア */
+.left-content {
+    flex: 1;
+    min-width: 0;
+}
+
+/* 右側の広告エリア（追従設定） */
+.right-panel {
+    width: 300px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 20px; /* スクロール時に止まる位置 */
+    align-self: flex-start;
+}
+
+.ad-space {
+    width: 300px;
+    height: 600px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #3d4a54;
+}
+
+/* スマホ表示では縦に並べる */
+@media screen and (max-width: 1000px) {
+    .main-layout {
+        flex-direction: column;
+        align-items: center;
+    }
+    .right-panel {
+        position: static;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+}
+.side-info-box {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(102, 192, 244, 0.2);
+    padding: 20px;
+    margin-bottom: 20px; /* 広告との間隔 */
+    border-radius: 4px;
+    text-align: left;
+}
+
+.side-info-box h3 {
+    color: #66c0f4;
+    font-size: 0.9rem;
+    margin: 0 0 10px 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.side-info-box p {
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: #acb2b8;
+    margin: 0;
+}
+
+.side-info-box strong {
+    color: #fff;
+}
+
     </style>
 </head>
 <body>
@@ -222,12 +301,15 @@ footer a:hover {
             <div class="nav-item active" data-category="cat-all">TOP</div>
             <div class="nav-item" data-category="cat-game">ゲーム</div>
             <div class="nav-item" data-category="cat-typing">タイピング</div>
-            <div class="nav-item" data-category="cat-guide">攻略</div>
-            <!-- <a href="https://x.com..." class="nav-item" target="_blank">Twitter</a> -->
+            <!--<div class="nav-item" data-category="cat-guide">攻略</div>
+             <a href="https://x.com..." class="nav-item" target="_blank">Twitter</a> -->
         </nav>
     </header>
 
-    <div class="container">
+    <div class="main-layout">
+
+        <div class="left-content">
+
         <!-- 「TOP」カテゴリ -->
         <div id="cat-all" class="category-content active">
             <!-- 47都道府県タイピング -->
@@ -235,13 +317,13 @@ footer a:hover {
                 <div class="thumb-area"><span class="thumb-placeholder">⌨️</span></div>
                 <div class="info-area">
                     <div class="game-title">47都道府県タイピング</div>
-                    <div class="game-desc">日本の全47都道府県を素早く入力！</div>
+                    <div class="game-desc">タイピング練習ゲーム。47都道府県を素早く入力！白地図を埋めるクイズモードもあります。</div>
                     <div class="play-status">PLAYABLE</div>
                 </div>
             </a>
             <!-- 絵文字ローグ -->
             <a href="./EmojiRogue/" class="game-card">
-                <div class="thumb-area"><span class="thumb-placeholder">⚔️</span></div>
+                <div class="thumb-area"><span class="thumb-placeholder">🐤</span></div>
                 <div class="info-area">
                     <div class="game-title">絵文字ローグ</div>
                     <div class="game-desc">絵文字で描かれた世界を探索するローグライクRPG。</div>
@@ -250,13 +332,14 @@ footer a:hover {
             </a>
         </div>
 
+
         <!-- 「ゲーム」カテゴリ -->
         <div id="cat-game" class="category-content">
             <a href="./EmojiRogue/index.html" class="game-card">
-                <div class="thumb-area"><span class="thumb-placeholder">⚔️</span></div>
+                <div class="thumb-area"><span class="thumb-placeholder">🐤</span></div>
                 <div class="info-area">
                     <div class="game-title">絵文字ローグ</div>
-                    <div class="game-desc">ゲームカテゴリのコンテンツです。</div>
+                    <div class="game-desc">絵文字で描かれた世界を探索するローグライクRPG。</div>
                     <div class="play-status">PLAYABLE</div>
                 </div>
             </a>
@@ -268,27 +351,25 @@ footer a:hover {
                 <div class="thumb-area"><span class="thumb-placeholder">⌨️</span></div>
                 <div class="info-area">
                     <div class="game-title">47都道府県タイピング</div>
-                    <div class="game-desc">タイピングカテゴリのコンテンツです。</div>
+                    <div class="game-desc">タイピング練習ゲーム。47都道府県を素早く入力！白地図を埋めるクイズモードもあります。</div>
                     <div class="play-status">PLAYABLE</div>
                 </div>
             </a>
         </div>
-
-            <!-- 「攻略」カテゴリ -->
-<div id="cat-guide" class="category-content">
-    <!-- 攻略ページへのリンクカード -->
-    <a href="./EmojiRogue/ER-guide.html" class="game-card">
-        <div class="thumb-area"><span class="thumb-placeholder">🐤</span></div>
-        <div class="info-area">
-            <div class="game-title">絵文字ローグ 攻略Wiki</div>
-            <div class="game-desc">モンスター図鑑、アイテム効果、基本システムを掲載。</div>
-            <div class="play-status" style="background: #2a475e; color: #66c0f4;">DATABASE</div>
-        </div>
-    </a>
 </div>
 
+
+<div class="right-panel">
+    <div class="side-info-box">
+        <h3>About prot-0100 arcade</h3>
+        <p>当サイトはブラウザで遊べるゲームを公開している個人サイトです。<br>
+            すべて無料で遊べますが、PCのみ対応です。<br>
+        </p>
     </div>
 
+    <div class="ad-space">AD</div>
+</div>
+</div>
 
     <footer>
         <p>&copy; 2026 prot-0100 arcade. // <a href="./privacy.html">privacy policy</a> // <a href="https://forms.gle/PRHQvCv9Bw78JMbTA" target="_blank">system report</a></p>
