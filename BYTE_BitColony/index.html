@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>BYTE:Bit-Colony｜放置型コロニーシミュレータ(放置ゲー)｜無料ブラウザゲーム</title>
+    <style>
+        :root { --bg-color: #050505; --accent-yellow: #ffff00; --neon-blue: #00f2ff; }
+        body { background: var(--bg-color); color: white; margin: 0; font-family: 'Consolas', monospace; display: flex; flex-direction: column; /*height: 100vh;*/ min-height: 100vh; overflow: auto; }
+        header { background: #111; padding: 10px 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; z-index: 10; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
+        .score-display { font-size: 24px; font-weight: bold; color: var(--neon-blue); text-shadow: 0 0 8px var(--neon-blue); }
+        .left-content {
+    flex: 1;
+    min-width: 0;
+}
+        
+        .main-layout {
+    display: flex;
+    position: relative; 
+    width: 100%;         
+    max-width: 1180px;
+    margin: 0 auto;
+    overflow: visible;  
+}
+        .sidebar-header { font-size: 14px; color: var(--neon-blue); margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; background: #222; padding: 8px; border: 1px solid #444; }
+        .canvas-container { flex: 1; display: flex; justify-content: center; align-items: center; background: #000; transition: padding 0.3s ease; }
+      
+        canvas { border: 1px solid #222; image-rendering: pixelated; width: 100%; height: auto; max-width: 900px; }
+        .ant-card { background: #1a1a1a; border: 1px solid #333; margin-bottom: 8px; border-radius: 4px; overflow: hidden; }
+        .ant-summary { padding: 8px; cursor: pointer; font-size: 12px; display: flex; justify-content: space-between; background: #222; }
+        .ant-details { padding: 10px; display: none; border-top: 1px solid #333; }
+        .ant-details.active { display: block; }
+        .ant-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 5px; }
+        button { background: #222; color: #eee; border: 1px solid #444; padding: 6px; cursor: pointer; font-size: 10px; width: 100%; transition: 0.2s; }
+        button:hover:not(:disabled) { border-color: var(--neon-blue); color: var(--neon-blue); box-shadow: 0 0 5px var(--neon-blue); }
+        button:disabled { opacity: 0.2; }
+        #hire-btn, #map-btn { background: #002233; border-color: var(--neon-blue); margin-top: 10px; padding: 10px; font-weight: bold; color: var(--neon-blue); }
+        .cost { font-size: 9px; color: #888; display: block; }
+
+        .flash-card {
+  box-shadow: 0 0 12px #00f2ff;
+  border-color: #00f2ff;
+  transform: scale(1.02);
+  transition: 0.15s;
+}
+
+.sidebar {
+    width: 280px;
+    position: absolute;
+    left: 0;
+    top: 0px; /* ←これだけ追加 */
+    bottom: 0;
+
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+
+    background: rgba(15, 15, 15, 0.95);
+    border-right: 1px solid #333;
+    z-index: 50;
+
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    overflow-y: auto;
+    direction: rtl;
+}
+.sidebar > * {
+    direction: ltr;
+}
+.sidebar.open {
+    transform: translateX(0);
+}
+.colony-btn {
+    padding: 0px 16px;
+    font-size: 12px;
+    width: 30%;
+    border: 1px solid #222;
+    background: #111;
+    color: var(--neon-blue);
+}
+
+.colony-btn:hover {
+    color: var(--neon-blue);
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 5px var(--neon-blue);
+}
+
+
+.right-panel {
+    width: 300px;
+    flex-shrink: 0;
+
+    position: sticky;
+    top: 80px;
+}
+
+.hidden {
+    display: none;
+}
+
+.ad-space {
+    height: 600px;
+    top: 80px;
+
+    background: #111;
+    border: 1px solid #222;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    visibility: hidden;
+}
+
+.toggle-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+    padding: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid #333;
+    background: #111;
+    color: #aaa;
+
+    cursor: pointer;
+}
+
+.toggle-btn:hover {
+    border-color: var(--neon-blue);
+    color: var(--neon-blue);
+    box-shadow: 0 0 5px var(--neon-blue);
+}
+
+.hidden {
+    display: none;
+}
+
+#click-income-btn {
+    width: 100%;
+    padding: 20px;
+    font-size: 18px;
+    font-weight: bold;
+    background: #111;
+    color: #00f2ff;
+    border: 1px solid #00f2ff;
+    cursor: pointer;
+    transition: 0.1s;
+}
+
+#click-income-btn:active {
+    transform: scale(0.95);
+    box-shadow: 0 0 15px #00f2ff;
+}
+
+
+/*下部 */
+.container {
+    width: 90%;
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.guide-section {
+    width: 100%; /* containerの幅いっぱいに広げる */
+    background: rgba(22, 32, 45, 0.8);
+    border: 1px solid rgba(102, 192, 244, 0.2);
+    border-radius: 4px;
+    padding: 30px;
+    margin-bottom: 40px;
+    box-sizing: border-box; /* 重要：これがないとpadding分だけ外にはみ出します */
+}
+
+
+        h2 {
+            color: #66c0f4;
+            font-size: 1.4rem;
+            border-bottom: 1px solid #2a475e;
+            padding-bottom: 10px;
+            margin-top: 0;
+            letter-spacing: 1px;
+        }
+
+        /* テーブルスタイル */
+        .wiki-table {
+    width: 100%; /* guide-sectionのpaddingの内側にピッタリ合わせる */
+    border-collapse: collapse;
+    margin-top: 20px;
+    table-layout: fixed; /* 列の幅を安定させる（任意） */
+}
+
+
+        .wiki-table th, .wiki-table td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #2a475e;
+        }
+
+        .wiki-table th {
+            background-color: rgba(42, 71, 94, 0.5);
+            color: #66c0f4;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .wiki-table tr:hover {
+            background-color: rgba(102, 192, 244, 0.05);
+        }
+
+        .emoji-cell {
+            font-size: 2rem;
+            filter: drop-shadow(0 0 8px rgba(102, 192, 244, 0.4));
+        }
+
+        .status-val { color: #fff; font-weight: bold; }
+        .floor-label { color: #acb2b8; font-size: 0.85rem; }
+
+        .note {
+            background: rgba(76, 107, 34, 0.2);
+            color: #beee11;
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+        }
+
+        /* システム解説用の追加スタイル */
+        .system-box {
+    width: 100%; /* 親要素(guide-section)に合わせる */
+    background: rgba(42, 71, 94, 0.3);
+    border-left: 4px solid #66c0f4;
+    padding: 15px 20px;
+    box-sizing: border-box; /* はみ出し防止 */
+    margin: 14px 0;
+    padding: 18px 22px;
+}
+
+    .system-box h3 {
+        color: #fff;
+        font-size: 1.1rem;
+        margin-top: 0;
+    }
+    .system-box p {
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+    }
+    .system-box ul {
+        margin: 0;
+        padding-left: 20px;
+        font-size: 0.85rem;
+        color: #acb2b8;
+    }
+    .system-box strong {
+        color: #66c0f4;
+    }
+    .section-divider {
+    height: 24px;
+}
+
+  /* 全体のレイアウト：左（メイン）と右（広告）を並べる */
+  .whole-page-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 5px;
+
+    max-width: 100%;
+    margin: 0;
+    padding: 10px;
+
+    align-items: flex-start;
+}
+
+    </style>
+</head>
+<body>
+      <!-- Header topに戻る -->
+  <div style="position: fixed; top: 0; left: 0; width: 100%; background: #1b2838; padding: 10px 20px; display: flex; justify-content: space-between; border-bottom: 1px solid #66c0f4; font-family: sans-serif; z-index: 99999; box-sizing: border-box; align-items: center;">
+    <a href="../" style="color: #66c0f4; text-decoration: none; font-weight: light;">TOPに戻る</a>
+    <span style="color: rgba(255,255,255,0.3); font-family: 'Courier New', Courier, monospace; font-size: 1rem; letter-spacing: 0.1px; text-transform: lowercase; white-space: nowrap;">prot-0100 arcade</span>
+</div>
+
+<div style="height: 40px;"></div>
+
+    <header style="display:flex; flex-direction:column; gap:4px;">
+
+        <!-- 上段：情報 -->
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div class="score-display">
+                SCORE: <span id="total-score">0</span>
+            </div>
+            <div style="font-size: 12px; color:#00f2ff;">
+                
+                MAP Lv: <span id="map-lv">1</span> |
+                Bits: <span id="ant-count">1</span>/<span id="max-ants">3</span>
+            </div> 
+            <div id="economy-ui" style="font-size:12px; color:#aaa;"></div>
+            
+        </div>
+    
+        <!-- 下段：操作 + 右端RESET -->
+        <div style="display:flex; align-items:center; gap:12px;">
+        <button class="colony-btn" onclick="toggleSidebar()">
+            COLONY MEMBERS
+        </button>
+        <button id="click-income-btn" onclick="manualIncome()"
+            style="
+                padding:6px 6px;
+                font-size:12px;
+                width: 30%;
+                font-weight:bold;
+                background:#111;
+                color:#00f2ff;
+                border:1px solid #00f2ff;
+                cursor:pointer;
+                transition:0.1s;
+            "
+            onmousedown="this.style.transform='scale(0.9)'"
+            onmouseup="this.style.transform='scale(1)'"
+        >
+            TAP +5
+        </button>
+        <button onclick="resetGame()" style="
+                    padding:2px 6px;
+                    font-size:10px;
+                    width: 30%;
+                    background:#110000;
+                    color:#aa4444;
+                    border:1px solid #442222;
+                    opacity:0.6;
+                    transition:0.2s;
+                "
+                onmouseover="this.style.opacity=1; this.style.borderColor='#ff4444'; this.style.color='#ff6666';"
+                onmouseout="this.style.opacity=0.6; this.style.borderColor='#442222'; this.style.color='#aa4444';"
+                >
+                    RESET
+                </button>
+        </div>
+    
+    </header>
+
+    <div class="whole-page-container"><!-- 左側：ここには「ゲーム」と「説明文」をまるごと入れる -->
+
+<div id="offline-msg" style="
+    position:absolute;
+    top:60px;
+    left:50%;
+    transform:translateX(-50%);
+    background:#111;
+    border:1px solid #00f2ff;
+    padding:10px 20px;
+    color:#00f2ff;
+    display:none;
+    z-index:100;
+">
+    OFFLINE +0
+</div>
+
+<div class="left-content">
+
+<div class="main-layout">
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header" onclick="toggleSidebar()"><span>COLONY MEMBERS</span><span id="toggle-icon">◀</span></div>
+        <button id="map-btn" onclick="expandMap()">EXPAND MAP <span class="cost" id="map-cost">Cost: 1000</span></button>
+        <button id="hire-btn" onclick="hireNewAnt()">RECRUIT Bit <span class="cost">Cost: 500</span></button>
+        <div id="ant-list-content"></div>        
+    </div>
+
+    <div class="canvas-container" id="canvas-wrap">
+        <canvas id="gameCanvas" width="900" height="600"></canvas>
+    </div>
+</div>
+
+<div style="height: 60px;"></div>
+
+<div><h2><center>BYTE:Bit-Colony -Autonomous Idle Swarm-</center></h2></div>
+
+    <div class="container">
+        <div class="guide-section">
+            <h2>概要</h2>
+            <div class="system-box">
+        
+                <p>本作は、ビットのコロニーを拡大し、未知の領域を切り拓いていく放置型コロニーシミュレータです。<br>
+                    プレイヤーの役割は、ビットたちが集めたドットを「個体強化」と「マップ拡張」へ戦略的に投資することです。<br>
+                    ビットたちは迷路を彷徨い、ドットを回収して富を築きます。<br>
+                    最初は小さな一歩ですが、投資を繰り返すことで、やがて数字は爆発的なインフレへと突入します。</p>
+                </div>        
+
+        <div class="section-divider"></div>
+
+            <h2>基本システム</h2>
+        
+            <div class="system-box">
+                <h3>ビットの行動</h3>
+                <p>
+                    ビットは自動で迷路内を移動し、ドット（資源）を回収します。<br>
+                </p>
+                <ul>
+                    <li>壁以外のマスをランダムに移動</li>
+                    <li>ドットを見つけると自動で回収</li>
+                    <li>空きマスでは一定確率でドットを生成</li>
+                    <li><strong>自身が生成したドットは回収しない</strong></li>
+                </ul>
+            </div>
+        
+            <div class="system-box">
+                <h3>ドット(資源)</h3>
+                <p>
+                    マップ上のドットは資源です。<br>
+                    回収することでスコアが増加します。<br>
+                    資源はビットの能力によって<strong>ドットの価値が変化</strong>します。
+                </p>
+                <ul>
+                    <li>価値はビットの「SEEDレベル」に依存</li>
+                    <li>回収時にスコアを獲得</li>
+                    <li>回収されたマスは空白になる</li>
+                </ul>
+            </div>
+        
+            <div class="system-box">
+                <h3>プラント（生成）</h3>
+                <p>
+                    空きマスではビットが資源を生成することがあります。<br>
+                    これによりマップ上に新しい資源が広がっていきます。
+                </p>
+                <ul>
+                    <li>確率は「PLANT値」に依存</li>
+                    <li>生成されるドットの価値はSEEDレベルに依存</li>
+                    <li>植えないビットは空白を維持し、流れを改善します</li>
+                </ul>
+            </div>
+        
+            <div class="system-box">
+                <h3>ビットの強化</h3>
+                <p>
+                    ビットは3種類の能力を強化できます。<br>
+                    どの能力を伸ばすかで役割が大きく変化します。
+                </p>
+                <ul>
+                    <li><strong>SPD</strong> ： 移動速度が上昇</li>
+                    <li><strong>SEED</strong> ： 生成するドットの価値が上昇</li>
+                    <li><strong>PLANT</strong> ： プラントの確率が上昇</li>
+                </ul>
+            </div>         
+        
+            <div class="system-box">
+                <h3>マップ拡張</h3>
+                <p>
+                    スコアを消費することでマップを拡張できます。<br>
+                    拡張するとビットの最大数も増加します。
+                </p>
+                <ul>
+                    <li>拡張ごとにマップが広がる</li>
+                    <li>ビットの雇用上限が増加</li>
+                    <li>より効率的なコロニーを構築しましょう</li>
+                </ul>
+            </div>
+
+            <div class="system-box">
+                <h3>ビルド</h3>
+                <p>
+                    このゲームでは、すべてのビットを同じ能力へと強化するのが最適とは限りません。<br>
+                    役割を分けることで、効率が大きく向上します。<br>
+                    あなたの思うがままにビットを育てて、コロニーを築き上げましょう。
+                </p>
+            </div>
+        
+        </div><!-- guide-section -->
+
+        <div class="guide-section">
+
+            <h2>アップグレード詳細</h2>
+            
+            <table class="wiki-table">
+                <tr>
+                    <th>項目</th>
+                    <th>効果</th>
+                    <th>補足</th>
+                </tr>
+            
+                <tr>
+                    <td>SPD</td>
+                    <td> +0.25 / Lv</td>
+                    <td>移動速度が上昇</td>
+                </tr>
+            
+                <tr>
+                    <td>SEED</td>
+                    <td>ドット価値 = Lv × 4</td>
+                    <td>生成するドットの価値が上昇</td>
+                </tr>
+            
+                <tr>
+                    <td>PLANT</td>
+                    <td> +5% / Lv</td>
+                    <td>ドット生成確率：最大100%</td>
+                </tr>
+            
+            </table>
+            
+            </div>
+    </div><!-- container -->
+</div><!-- left-content -->
+
+
+<div class="right-panel">
+
+    <div class="ad-space">AD</div>
+
+</div>
+</div><!-- whole-page-container -->
+
+
+
+
+
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const MAX_MAP_LV = 11;
+
+    let mapLv = 1, TILE_SIZE = 60, GRID_W, GRID_H, maze = [];
+    let totalScore = 1000;
+    const namePool = ["Alpha", "Bravo", "Charly", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India"];
+
+    let incomeHistory = [];
+    let lastSave = 0;
+
+    function resetGame(){
+    if(!confirm("本当にリセットしますか？")) return;
+    if(!confirm("完全に消えます。戻せません。")) return;
+
+    localStorage.removeItem("antSave");
+    location.reload();
+}
+
+function manualIncome() {
+    totalScore += 5;
+
+    // 経済ログにも入れる（グラフ/平均値維持用）
+    recordIncome(5);
+
+    // UI更新（即反映）
+    updateUI();
+}
+
+function recordIncome(amount){
+    incomeHistory.push({
+        amount: amount,
+        time: Date.now()
+    });
+
+    // 軽量化（古いデータ削除）
+    if(incomeHistory.length > 300){
+        incomeHistory.shift();
+    }
+}
+function getAverageIncomePerSecond(){
+    const now = Date.now();
+
+    // 直近1秒だけ残す
+    const recent = incomeHistory.filter(h => now - h.time < 1000);
+
+    const sum = recent.reduce((a,b)=>a + b.amount, 0);
+
+    return sum;
+}
+
+function updateLastActiveTime() {
+    localStorage.setItem("lastActiveTime", Date.now());
+}
+
+    function getDotColors(val) {
+        const lv = val / 10;
+        if (lv <= 1) return { main: '#ffff00', glow: 'rgba(255, 255, 0, 0.5)' }; // 黄
+        if (lv <= 2) return { main: '#ffaa00', glow: 'rgba(255, 170, 0, 0.5)' }; // オレンジ
+        if (lv <= 3) return { main: '#ff3300', glow: 'rgba(255, 51, 0, 0.5)' }; // 赤
+        if (lv <= 5) return { main: '#ff00ff', glow: 'rgba(255, 0, 255, 0.5)' }; // ピンク
+        if (lv <= 7) return { main: '#9900ff', glow: 'rgba(153, 0, 255, 0.5)' }; // 紫
+        return { main: '#00f2ff', glow: 'rgba(0, 242, 255, 0.6)' }; // ネオン水色
+    }
+
+    function generateMaze() {
+        GRID_W = Math.floor(900 / TILE_SIZE); GRID_H = Math.floor(600 / TILE_SIZE);
+        maze = [];
+        for(let y=0; y<GRID_H; y++) {
+            maze[y] = [];
+            for(let x=0; x<GRID_W; x++) {
+                // 自動復活なしのため、最初は通路(2)で埋める
+                maze[y][x] = (x===0 || x===GRID_W-1 || y===0 || y===GRID_H-1) ? 1 : 2;
+            }
+        }
+        for (let y = 2; y < GRID_H-2; y += 2) {
+            for (let x = 2; x < GRID_W-2; x += 2) {
+                maze[y][x] = 1;
+                let dirs = [{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
+                if(x>2) dirs = dirs.filter(d => d.x !== -1);
+                let d = dirs[Math.floor(Math.random()*dirs.length)];
+                maze[y+d.y][x+d.x] = 1;
+            }
+        }
+        // 最初だけ少しエサをまく
+        for(let i=0; i<200; i++) {
+            let rx = Math.floor(Math.random()*GRID_W), ry = Math.floor(Math.random()*GRID_H);
+            if(maze[ry][rx] === 2) maze[ry][rx] = { val: 5 };
+        }
+        canvas.width = GRID_W * TILE_SIZE;
+canvas.height = GRID_H * TILE_SIZE;
+    }
+
+
+    let ants = [{ id: 0, name: "Alpha", color: "#00f2ff", gridX: 1, gridY: 1, x: 0, y: 0, targetX: 0, targetY: 0, dir: {x:0,y:0}, level: 1, speedLvl: 1, valLvl: 1, plantLvl: 1, plant: 50, open: true }];
+
+    function updateMapButton() {
+    const btn = document.getElementById("map-btn");
+    if (!btn) return;
+
+    if (mapLv >= MAX_MAP_LV) {
+        btn.innerHTML = "MAX LEVEL";
+        btn.disabled = true;
+        btn.style.opacity = 0.5;
+        btn.style.cursor = "not-allowed";
+        return;
+    }
+
+    // expandMapと同じ5.2倍のコスト計算
+    const nextCost = Math.floor(Math.pow(5.2, mapLv - 1) * 1000);
+
+    // 読みやすい単位に変換
+    let displayCost = "";
+    if (nextCost >= 100000000) {
+        displayCost = (nextCost / 100000000).toFixed(2) + "億";
+    } else if (nextCost >= 10000) {
+        displayCost = (nextCost / 10000).toFixed(1) + "万";
+    } else {
+        displayCost = nextCost.toLocaleString();
+    }
+
+    // ボタンのテキストと有効化/無効化の更新
+    btn.innerHTML = `EXPAND MAP <span class="cost">Cost: ${displayCost}</span>`;
+    btn.disabled = totalScore < nextCost;
+    
+    // スコアが足りない時の見た目調整（任意）
+    btn.style.opacity = totalScore < nextCost ? 0.6 : 1.0;
+}
+
+
+function expandMap() {
+    if (mapLv >= MAX_MAP_LV) return;
+
+    let currentCost = Math.floor(Math.pow(5.2, mapLv - 1) * 1000);
+
+    if (totalScore >= currentCost && TILE_SIZE > 10) {
+        totalScore -= currentCost; 
+        mapLv++;
+        
+        TILE_SIZE = Math.max(10, 60 - (mapLv - 1) * 5);
+        generateMaze();
+        updateMapButton();
+        
+        ants.forEach(a => { 
+            a.gridX = 1; a.gridY = 1; 
+            a.x = a.targetX = TILE_SIZE; 
+            a.y = a.targetY = TILE_SIZE; 
+        });
+        renderAntList();
+    }
+}
+
+
+    function hireNewAnt() {
+        if (totalScore >= 500 && ants.length < mapLv * 3) {
+            totalScore -= 500;
+            const newAnt = { id: ants.length, name: getUniqueName(), color: `hsl(${Math.random()*360},100%,60%)`, gridX: 1, gridY: 1, x: TILE_SIZE, y: TILE_SIZE, targetX: TILE_SIZE, targetY: TILE_SIZE, dir: {x:0,y:0}, speedLvl: 1, valLvl: 1, plantLvl: 1, plant: 0, open: false };
+            ants.push(newAnt); renderAntList();
+        }
+    }
+
+    function getUniqueName() {
+    const usedNames = ants.map(a => a.name);
+
+    // namePoolから未使用を探す
+    const available = namePool.filter(n => !usedNames.includes(n));
+
+    if (available.length > 0) {
+        return available[0];
+    }
+
+    // 足りなくなったら連番
+    return "Ant-" + Date.now().toString().slice(-4);
+}
+
+function renameAnt(id){
+    const newName = prompt("名前を入力");
+    if(newName){
+        ants[id].name = newName;
+        renderAntList();
+    }
+}
+
+function changeColor(id){
+    ants[id].color = `hsl(${Math.random()*360},100%,60%)`;
+    renderAntList();
+}
+
+    function renderAntList() {
+        const container = document.getElementById('ant-list-content');
+        container.innerHTML = '';
+        ants.forEach(ant => {
+            const baseCost = {
+    s: 100,
+    v: 150,
+    p: 200
+}
+
+const sCost = Math.floor(baseCost.s * Math.pow(1.2, ant.level || 1));
+const vCost = Math.floor(baseCost.v * Math.pow(1.2, ant.level || 1));
+const pCost = Math.floor(baseCost.p * Math.pow(1.2, ant.level || 1));
+
+            const card = document.createElement('div');
+            card.className = 'ant-card';
+            card.dataset.id = ant.id;
+            card.innerHTML = `
+<div class="ant-summary">
+
+  <span style="color:${ant.color}">
+    ${ant.name} <span style="font-size:10px;">Lv.${ant.level || 1}</span>
+  </span>
+
+  <span style="display:flex; gap:4px; align-items:center;">
+    <button onclick="event.stopPropagation(); renameAnt(${ant.id})">N</button>
+    <button onclick="event.stopPropagation(); changeColor(${ant.id})">C</button>
+
+    <button
+  class="toggle-btn"
+  onclick="event.stopPropagation(); toggleAnt(${ant.id})"
+>
+  ${ant.open ? '▼' : '▲'}
+</button>
+  </span>
+
+</div>
+
+<div class="ant-details ${ant.open ? 'active' : ''}">
+
+  <div style="font-size:10px; margin-bottom:5px;">
+    SPD:Lv${ant.speedLvl} 
+    SEED:Lv${ant.valLvl} 
+    PLT:${ant.plant}%
+  </div>
+
+  <div class="ant-btns">
+    <button class="btn-s" onclick="upgrade(${ant.id},'s')"
+      ${totalScore < sCost ? 'disabled' : ''}>
+      SPD+<span class="cost">${sCost}</span>
+    </button>
+
+    <button class="btn-v" onclick="upgrade(${ant.id},'v')"
+      ${totalScore < vCost ? 'disabled' : ''}>
+      SEED+<span class="cost">${vCost}</span>
+    </button>
+  </div>
+
+  <button class="btn-p" style="margin-top:5px;"
+    onclick="upgrade(${ant.id},'p')"
+    ${totalScore < pCost || ant.plant >= 100 ? 'disabled' : ''}>
+    PLANT+<span class="cost">${ant.plant >= 100 ? 'MAX' : pCost}</span>
+  </button>
+
+  <button class="btn-fire" onclick="fireAnt(${ant.id})">
+    FIRE
+  </button>
+
+</div>
+`;
+            container.appendChild(card);
+        });
+    }
+
+    function fireAnt(id){
+    ants = ants.filter(a => a.id !== id);
+
+    // ID振り直し
+    ants.forEach((a, i) => a.id = i);
+
+    renderAntList();
+}
+
+    function upgrade(id, type) {
+    let a = ants[id];
+
+    const card = document.querySelector(`.ant-card[data-id="${id}"]`);
+
+    // 共通コスト
+    const baseCost = {
+        s: 100,
+        v: 150,
+        p: 200
+    };
+
+    const cost = Math.floor(baseCost[type] * Math.pow(1.2, a.level || 1));
+
+    // 各強化
+    if(type==='s' && totalScore >= cost) {
+        totalScore -= cost;
+        a.speedLvl++;
+        a.level = (a.level || 1) + 1;
+    }
+
+    if(type==='v' && totalScore >= cost) {
+        totalScore -= cost;
+        a.valLvl++;
+        a.level = (a.level || 1) + 1;
+    }
+
+    if(type==='p' && totalScore >= cost && a.plant < 100) {
+        totalScore -= cost;
+        a.plant += 5;
+        a.plantLvl++;
+        a.level = (a.level || 1) + 1;
+    }
+
+    // エフェクト（そのまま）
+    if(card){
+        card.classList.add("flash-card");
+        setTimeout(()=>card.classList.remove("flash-card"),150);
+    }
+
+    setTimeout(() => {
+        renderAntList();
+    }, 120);
+}
+
+    function updateButtonStates() {
+    ants.forEach(ant => {
+        if (!ant.open) return;
+
+        const baseSCost = 100;
+const baseVCost = 150;
+const basePCost = 200;
+
+const sCost = Math.floor(baseSCost * Math.pow(1.2, ant.level));
+const vCost = Math.floor(baseVCost * Math.pow(1.2, ant.level));
+const pCost = Math.floor(basePCost * Math.pow(1.2, ant.level));
+
+        const card = document.querySelector(`.ant-card[data-id="${ant.id}"]`);
+        if (!card) return;
+
+        const btnS = card.querySelector('.btn-s');
+        const btnV = card.querySelector('.btn-v');
+        const btnP = card.querySelector('.btn-p');
+
+        if (btnS) btnS.disabled = totalScore < sCost;
+        if (btnV) btnV.disabled = totalScore < vCost;
+        if (btnP) btnP.disabled = totalScore < pCost || ant.plant >= 100;
+    });
+}
+
+function loop() {
+    requestAnimationFrame(loop);
+
+    updateGame();   // ← アリの動きと経済だけ
+    render();       // ← 描画だけ
+    syncUI();       // ← UIだけ
+}
+
+
+function updateGame() {
+    ants.forEach(ant => {
+        const spd = 0.5 + (ant.speedLvl * 0.25);
+
+        const dx = ant.targetX - ant.x;
+        const dy = ant.targetY - ant.y;
+
+        if (Math.abs(dx) + Math.abs(dy) < spd) {
+
+            ant.x = ant.targetX;
+            ant.y = ant.targetY;
+
+            let cell = maze[ant.gridY][ant.gridX];
+
+            // 収穫
+if (cell && cell.val) {
+
+// 自分以外のみ収穫可能
+if (cell.ownerId !== ant.id) {
+
+    const gain = cell.val;
+    const tax = gain * (0.1 + ant.speedLvl * 0.02);
+    const net = Math.floor(gain - tax);
+
+    totalScore += net;
+    recordIncome(net);
+
+    // 収穫したときだけ空にする
+    maze[ant.gridY][ant.gridX] = 2;
+}
+}
+
+            // 植え
+            else if (cell === 2 && Math.random() * 100 < ant.plant) {
+                maze[ant.gridY][ant.gridX] = {
+    val: ant.valLvl * 4,
+    ownerId: ant.id
+};
+            }
+
+            // 移動
+            const dirs = [
+                {x:1,y:0},{x:-1,y:0},
+                {x:0,y:1},{x:0,y:-1}
+            ];
+
+            const possible = dirs.filter(d =>
+                maze[ant.gridY + d.y] &&
+                maze[ant.gridY + d.y][ant.gridX + d.x] !== 1
+            );
+
+            const forward = possible.filter(
+                d => d.x !== -ant.dir.x || d.y !== -ant.dir.y
+            );
+
+            const move = (forward.length ? forward : possible)
+                [Math.floor(Math.random() * (forward.length || possible.length))];
+
+            if (move) {
+                ant.dir = move;
+                ant.gridX += move.x;
+                ant.gridY += move.y;
+                ant.targetX = ant.gridX * TILE_SIZE;
+                ant.targetY = ant.gridY * TILE_SIZE;
+            }
+
+        } else {
+            ant.x += Math.sign(dx) * spd;
+            ant.y += Math.sign(dy) * spd;
+        }
+    });
+}
+function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let y = 0; y < GRID_H; y++) {
+        for (let x = 0; x < GRID_W; x++) {
+
+            const c = maze[y][x];
+
+            if (c === 1) {
+                ctx.strokeStyle = 'rgba(0, 242, 255, 0.5)';
+                ctx.lineWidth = 0.8;
+                //ctx.shadowBlur = 8;
+                ctx.shadowColor = '#00f2ff';
+                ctx.strokeRect(
+                    x * TILE_SIZE + 1,
+                    y * TILE_SIZE + 1,
+                    TILE_SIZE - 2,
+                    TILE_SIZE - 2
+                );
+                ctx.shadowBlur = 0;
+            }
+            
+
+            else if (c && c.val) {
+                const colors = getDotColors(c.val);
+
+                //ctx.shadowBlur = 10;
+                ctx.shadowColor = colors.glow;
+                ctx.fillStyle = colors.main;
+
+                const size = TILE_SIZE * 0.2;
+
+                ctx.beginPath();
+                ctx.arc(
+                    x * TILE_SIZE + TILE_SIZE / 2,
+                    y * TILE_SIZE + TILE_SIZE / 2,
+                    size,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fill();
+
+                //ctx.shadowBlur = 0;
+            }
+        }
+    }
+
+    ants.forEach(a => {
+       // ctx.shadowBlur = 3;
+        ctx.fillStyle = a.color;
+
+        ctx.fillRect(
+            a.x + TILE_SIZE / 4,
+            a.y + TILE_SIZE / 4,
+            TILE_SIZE / 2,
+            TILE_SIZE / 2,
+        );
+
+      //  ctx.shadowBlur = 0;
+    });
+}
+function syncUI() {
+    updateUI();
+    updateButtonStates();
+
+    const income = getAverageIncomePerSecond();
+
+    const eco = document.getElementById("economy-ui");
+    if (eco) {
+        eco.innerHTML =
+            `<span style="color:#00f2ff">${income.toFixed(1)}/s</span>`;
+    }
+
+    const mapBtn = document.getElementById('map-btn');
+    const hireBtn = document.getElementById('hire-btn');
+
+    if (mapBtn) mapBtn.disabled = totalScore < mapLv * 1000;
+    if (hireBtn) hireBtn.disabled = totalScore < 500 || ants.length >= mapLv * 3;
+}
+
+    function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+}
+
+function toggleAnt(id){
+    ants[id].open = !ants[id].open;
+    renderAntList();
+}
+
+function updateUI() {
+    const scoreEl = document.getElementById('total-score');
+    const mapEl = document.getElementById('map-lv');
+    const antEl = document.getElementById('ant-count');
+    const maxEl = document.getElementById('max-ants');
+
+    if (scoreEl) scoreEl.innerText = Math.floor(totalScore).toLocaleString();
+    if (mapEl) mapEl.innerText = mapLv;
+    if (antEl) antEl.innerText = ants.length;
+    if (maxEl) maxEl.innerText = mapLv * 3;
+
+    updateMapButton();
+}
+
+function saveGame() {
+    const data = {
+        totalScore,
+        mapLv,
+        TILE_SIZE,
+        ants,
+        avgIncome: getAverageIncomePerSecond(),
+        lastActiveTime: Date.now() // ←ここでだけ更新
+    };
+
+    localStorage.setItem("antSave", JSON.stringify(data));
+}
+
+function loadGame() {
+    const data = localStorage.getItem("antSave");
+    if (!data) return;
+
+    const parsed = JSON.parse(data);
+
+    totalScore = parsed.totalScore ?? 0;
+    mapLv = parsed.mapLv ?? 1;
+    TILE_SIZE = parsed.TILE_SIZE ?? 60;
+    ants = parsed.ants ?? ants;
+
+    const now = Date.now();
+    const last = parsed.lastActiveTime ?? now;
+
+    const diffSec = (now - last) / 1000;
+
+    if (diffSec > 10 && parsed.avgIncome > 0) {
+        const capped = Math.min(diffSec, 3600);
+        const offlineGain = parsed.avgIncome * capped * 0.5;
+
+        totalScore += offlineGain;
+        showOfflineGain(offlineGain, diffSec);
+    }
+
+}
+
+function showOfflineGain(amount, diffSec) {
+    const el = document.getElementById("offline-msg");
+    if (!el) return;
+
+    el.style.display = "block";
+
+    let shown = 0;
+    const target = Math.floor(amount);
+    const minutes = Math.floor(diffSec / 60);
+
+    const interval = setInterval(() => {
+        shown += Math.ceil(target / 30);
+
+        if (shown >= target) {
+            shown = target;
+            clearInterval(interval);
+        }
+
+        el.innerText = `OFFLINE +${shown.toLocaleString()} (${minutes} min AFK)`;
+    }, 30);
+
+    setTimeout(() => {
+        el.style.display = "none";
+    }, 3000);
+}
+
+loadGame();
+generateMaze();
+renderAntList();
+loop();
+
+setInterval(saveGame, 5000);
+
+</script>
+</body>
+</html>

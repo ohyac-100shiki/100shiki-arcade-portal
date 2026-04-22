@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>攻略データ - prot-0100 arcade</title>
+    <style>
+        body {
+            font-family: "Motiva Sans", Arial, "Hiragino Kaku Gothic ProN", sans-serif;
+            background-color: #1b2838;
+            background-image: radial-gradient(circle at top, #2a475e 0%, #1b2838 100%);
+            background-attachment: fixed;
+            color: #c7d5e0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            /* 固定ヘッダーの高さ分、上に余白を作る */
+            padding-top: 80px; 
+        }
+
+        /* 固定ヘッダー */
+        .fixed-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: #1b2838;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(102, 192, 244, 0.3);
+            z-index: 9999;
+            box-sizing: border-box;
+        }
+
+        .fixed-header a {
+            color: #66c0f4;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: 0.3s;
+        }
+
+        .fixed-header a:hover { opacity: 0.7; }
+
+        .fixed-header .site-logo {
+            color: rgba(255,255,255,0.3);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            text-transform: lowercase;
+        }
+
+        /* 中央寄せのコンテナ */
+        .container {
+    width: 60%; /* ここが全体の基準 */
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 0 100px 0;
+    box-sizing: border-box; /* paddingで幅が変わるのを防ぐ */
+}
+
+.guide-section {
+    width: 100%; /* containerの幅いっぱいに広げる */
+    background: rgba(22, 32, 45, 0.8);
+    border: 1px solid rgba(102, 192, 244, 0.2);
+    border-radius: 4px;
+    padding: 30px;
+    margin-bottom: 40px;
+    box-sizing: border-box; /* 重要：これがないとpadding分だけ外にはみ出します */
+}
+
+
+        h2 {
+            color: #66c0f4;
+            font-size: 1.4rem;
+            border-bottom: 1px solid #2a475e;
+            padding-bottom: 10px;
+            margin-top: 0;
+            letter-spacing: 1px;
+        }
+
+        /* テーブルスタイル */
+        .wiki-table {
+    width: 100%; /* guide-sectionのpaddingの内側にピッタリ合わせる */
+    border-collapse: collapse;
+    margin-top: 20px;
+    table-layout: fixed; /* 列の幅を安定させる（任意） */
+}
+
+
+        .wiki-table th, .wiki-table td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #2a475e;
+        }
+
+        .wiki-table th {
+            background-color: rgba(42, 71, 94, 0.5);
+            color: #66c0f4;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .wiki-table tr:hover {
+            background-color: rgba(102, 192, 244, 0.05);
+        }
+
+        .emoji-cell {
+            font-size: 2rem;
+            filter: drop-shadow(0 0 8px rgba(102, 192, 244, 0.4));
+        }
+
+        .status-val { color: #fff; font-weight: bold; }
+        .floor-label { color: #acb2b8; font-size: 0.85rem; }
+
+        .note {
+            background: rgba(76, 107, 34, 0.2);
+            color: #beee11;
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+        }
+
+        /* システム解説用の追加スタイル */
+        .system-box {
+    width: 100%; /* 親要素(guide-section)に合わせる */
+    background: rgba(42, 71, 94, 0.3);
+    border-left: 4px solid #66c0f4;
+    padding: 15px 20px;
+    box-sizing: border-box; /* はみ出し防止 */
+    margin: 14px 0;
+    padding: 18px 22px;
+}
+
+    .system-box h3 {
+        color: #fff;
+        font-size: 1.1rem;
+        margin-top: 0;
+    }
+    .system-box p {
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+    }
+    .system-box ul {
+        margin: 0;
+        padding-left: 20px;
+        font-size: 0.85rem;
+        color: #acb2b8;
+    }
+    .system-box strong {
+        color: #66c0f4;
+    }
+    .section-divider {
+    height: 24px;
+}
+    </style>
+</head>
+<body>
+
+     <!-- Header topに戻る -->
+  <div style="position: fixed; top: 0; left: 0; width: 100%; background: #1b2838; padding: 10px 20px; display: flex; justify-content: space-between; border-bottom: 1px solid #66c0f4; font-family: sans-serif; z-index: 99999; box-sizing: border-box; align-items: center;">
+    <a href="../" style="color: #66c0f4; text-decoration: none; font-weight: light;">TOPに戻る</a>
+    <span style="color: rgba(255,255,255,0.3); font-family: 'Courier New', Courier, monospace; font-size: 1rem; letter-spacing: 0.1px; text-transform: lowercase; white-space: nowrap;">prot-0100 arcade</span>
+</div>
+<div style="height: 40px;"></div>
+
+<div><h2>BYTE : Bit-Colony -Autonomous Idle Swarm- Database</h2></div>
+
+    <div class="container">
+        <div class="guide-section">
+            <h2>概要</h2>
+            <div class="system-box">
+        
+                <p>本作は、ビットのコロニーを拡大し、未知の領域を切り拓いていく放置型コロニーシミュレータです。<br>
+                    プレイヤーの役割は、ビットたちが集めたドットを「個体強化」と「マップ拡張」へ戦略的に投資することです。<br>
+                    ビットたちは迷路を彷徨い、ドットを回収して富を築きます。<br>
+                    最初は小さな一歩ですが、投資を繰り返すことで、やがて数字は爆発的なインフレへと突入します。</p>
+        </div>
+
+        <div class="section-divider"></div>
+
+            <h2>基本システム</h2>
+        
+            <div class="system-box">
+                <h3>ビットの行動</h3>
+                <p>
+                    ビットは自動で迷路内を移動し、ドット（資源）を回収します。<br>
+                </p>
+                <ul>
+                    <li>壁以外のマスをランダムに移動</li>
+                    <li>ドットを見つけると自動で回収</li>
+                    <li>空きマスでは一定確率でドットを生成</li>
+                    <li><strong>自身が生成したドットは回収しない</strong></li>
+                </ul>
+            </div>
+        
+            <div class="system-box">
+                <h3>ドット(資源)</h3>
+                <p>
+                    マップ上のドットは資源です。<br>
+                    回収することでスコアが増加します。<br>
+                    資源はビットの能力によって<strong>ドットの価値が変化</strong>します。
+                </p>
+                <ul>
+                    <li>価値はビットの「SEEDレベル」に依存</li>
+                    <li>回収時にスコアを獲得</li>
+                    <li>回収されたマスは空白になる</li>
+                </ul>
+            </div>
+        
+            <div class="system-box">
+                <h3>プラント（生成）</h3>
+                <p>
+                    空きマスではビットが資源を生成することがあります。<br>
+                    これによりマップ上に新しい資源が広がっていきます。
+                </p>
+                <ul>
+                    <li>確率は「PLANT値」に依存</li>
+                    <li>生成されるドットの価値はSEEDレベルに依存</li>
+                    <li>植えないビットは空白を維持し、流れを改善します</li>
+                </ul>
+            </div>
+        
+            <div class="system-box">
+                <h3>ビットの強化</h3>
+                <p>
+                    ビットは3種類の能力を強化できます。<br>
+                    どの能力を伸ばすかで役割が大きく変化します。
+                </p>
+                <ul>
+                    <li><strong>SPD</strong> ： 移動速度が上昇</li>
+                    <li><strong>SEED</strong> ： 生成するドットの価値が上昇</li>
+                    <li><strong>PLANT</strong> ： プラントの確率が上昇</li>
+                </ul>
+            </div>         
+        
+            <div class="system-box">
+                <h3>マップ拡張</h3>
+                <p>
+                    スコアを消費することでマップを拡張できます。<br>
+                    拡張するとビットの最大数も増加します。
+                </p>
+                <ul>
+                    <li>拡張ごとにマップが広がる</li>
+                    <li>ビットの雇用上限が増加</li>
+                    <li>より効率的なコロニーを構築しましょう</li>
+                </ul>
+            </div>
+
+            <div class="system-box">
+                <h3>ビルド</h3>
+                <p>
+                    このゲームでは、すべてのビットを同じ能力へと強化するのが最適とは限りません。<br>
+                    役割を分けることで、効率が大きく向上します。<br>
+                    あなたの思うがままにビットを育てて、コロニーを築き上げましょう。
+                </p>
+            </div>
+        
+        </div>
+</body>
+</html>

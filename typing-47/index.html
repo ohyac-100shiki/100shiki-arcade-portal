@@ -2,29 +2,25 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>日本地図タイピング</title>
+    <title>めざせ暗記！47都道府県タイピング｜日本地図・学習｜無料ブラウザゲーム</title>
     <style>
-        body {
+body {
     font-family: 'Helvetica Neue', Arial, sans-serif;
-    display: flex;
-    flex-direction: column; /* 縦に並べる */
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
     background-color: #f0f4f8;
     margin: 0;
-    overflow: hidden;
-
+    min-height: 100vh; 
+    display: block; 
     background-image: 
-        linear-gradient(90deg, rgba(204, 204, 204, 0.5) 1px, transparent 1px), /* 縦線 */
-        linear-gradient(rgba(204, 204, 204, 0.5) 1px, transparent 1px);       /* 横線 */
-    background-size: 30px 30px; /* 方眼のサイズ（お好みで調整） */
+        linear-gradient(90deg, rgba(204, 204, 204, 0.5) 1px, transparent 1px),
+        linear-gradient(rgba(204, 204, 204, 0.5) 1px, transparent 1px);
+    background-size: 30px 30px;
 }
 
 /* 地図を中央に配置 */
 #map-container {
-    width: 80%;
+    width: 100%;
     /* 75vhだとヘッダー分（約50px）を加味して少し大きいので、少し削ります */
+    max-width: 800px;
     max-height: 65vh; 
     display: flex;
     justify-content: center;
@@ -39,7 +35,7 @@
 }
 
 svg {
-    width: auto;
+    width: 100%;
     height: 100%;
 }
 
@@ -54,7 +50,7 @@ svg {
 }
 
 #kanji-display {
-    font-size: 3rem;
+    font-size: 2rem;
     font-weight: bold;
     margin-bottom: 5px;
     color: #2d3436;
@@ -134,16 +130,108 @@ svg {
     transition: fill 1s ease;
 }
 
-/* 広告を画面の端に浮かせるための設定 
-.ad-fixed-side {
-    position: fixed;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 9999;
-}*/
+.page-container {
+  max-width: 1200px; /* ゲーム + 広告に合わせる */
+    margin: 0 auto;
+    padding: 0;
+}
+.main-layout {
+    display: flex;
+    gap: 20px;
+    margin-top: 0;
+    
+}
+
+.left-content {
+    flex: 1;
+    min-width: 0;
+    max-width: 900px;
+    /* ゲーム要素を中央に寄せる設定を追加 */
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+}
+
+.right-panel {
+    width: 300px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 80px;
+    align-self: flex-start;
+}
+
+/* 広告 */
+.ad-space {
+    width: 300px;
+    height: 600px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px dashed rgba(0, 0, 0, 0.1);
+    color: rgba(0, 0, 0, 0.2);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    visibility: hidden; /* 場所は確保するけど見えなくする */
+}
 
 
+.guide-container {
+    width: 80%; /* ここが全体の基準 */
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 0 100px 0;
+    box-sizing: border-box; /* paddingで幅が変わるのを防ぐ */
+}
 
+.guide-section {
+    width: 100%; /* containerの幅いっぱいに広げる */
+    background: rgba(22, 32, 45, 0.8);
+    border: 1px solid rgba(102, 192, 244, 0.2);
+    border-radius: 4px;
+    padding: 30px;
+    margin-bottom: 40px;
+    box-sizing: border-box; /* 重要：これがないとpadding分だけ外にはみ出します */
+    color: #d1d1d1;
+}
+
+
+        h2 {
+            color: #66c0f4;
+            font-size: 1.4rem;
+            border-bottom: 1px solid #2a475e;
+            padding-bottom: 10px;
+            margin-top: 0;
+            letter-spacing: 1px;
+        }
+
+        .side-info-box {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(180, 180, 180, 0.2);
+    padding: 20px;
+    margin-bottom: 20px; /* 広告との間隔 */
+    border-radius: 4px;
+    text-align: left;
+}
+
+.side-info-box h3 {
+    color: #66c0f4;
+    font-size: 0.9rem;
+    margin: 0 0 10px 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.side-info-box p {
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: #e9e9e9;
+    margin: 0;
+}
+
+.side-info-box strong {
+    color: #fff;
+}
 
     </style>
 </head>
@@ -156,16 +244,9 @@ svg {
 
 <div style="height: 40px;"></div>
 
-  <!-- 左側の広告枠 
-  <div class="ad-fixed-side" style="left: 10px;">
-    <div style="width:160px; height:600px; background:#ddd; writing-mode:vertical-rl; padding:10px;">広告スペース（左）</div>
-  </div>
-
-  右側の広告枠 
-  <div class="ad-fixed-side" style="right: 10px;">
-    
-    <div style="width:160px; height:600px; background:#ddd; writing-mode:vertical-rl; padding:10px;">広告スペース（右）</div>
-  </div>-->
+<div class="page-container">
+  <div class="main-layout">
+    <div class="left-content">
   
   <a id="share-button" href="#" target="_blank">𝕏で記録をシェア</a>
 
@@ -403,10 +484,10 @@ svg {
         <div id="romaji-display">スペースキーで開始</div>
         <div id="info">
           正解数: <span id="score">0</span> / 47 | 
-          タイム: <span id="timer">0.0</span><br>
-          タイプミス: <span id="miss-count">0</span> 
-          
-      </div>
+          タイム: <span id="timer">0.0</span> | 
+          タイプミス: <span id="miss-count">0</span>
+        </div>
+
       <div id="mode-selector" style="text-align: center; margin: 20px;">
         <!-- 現在のページ -->
         <button style="background: #ff4757; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: default;">れんしゅうモード中</button>
@@ -416,10 +497,43 @@ svg {
             <button style="background: #ccc; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">クイズモードへ</button>
         </a>
       </div>
+      </div>
       
-      
-        
-    </div>
+      <div class="guide-container" style="width: 100%; margin-top: 50px;">
+        <div class="guide-section">
+            <h2>ゲーム概要</h2>
+            <p>都道府県の名前を打つことで地図がどんどん埋まっていきます。<br>
+              ミスを減らして全県制覇を目指しましょう！<br>
+              <div style="height: 20px;"></div>
+            <h2>地方区分と都道府県</h2>
+            <ul>
+              <li>北海道地方: 北海道</li>
+              <li>東北地方: 青森、岩手、宮城、秋田、山形、福島</li>
+              <li>関東地方: 茨城、栃木、群馬、埼玉、千葉、東京、神奈川</li>
+              <li>中部地方: 新潟、富山、石川、福井、山梨、長野、岐阜、静岡、愛知</li>
+              <li>近畿地方: 三重、滋賀、京都、大阪、兵庫、奈良、和歌山</li>
+              <li>中国地方: 鳥取、島根、岡山、広島、山口</li>
+              <li>四国地方: 徳島、香川、愛媛、高知</li>
+              <li>九州・沖縄地方: 福岡、佐賀、長崎、熊本、大分、宮崎、鹿児島、沖縄</li>
+            </ul>
+          </p>
+        </div>
+      </div> <!-- guide-container 終わり -->
+    </div> <!-- ★left-content 終わり -->
+
+    <div class="right-panel">
+      <div class="side-info-box">
+          <h3>めざせ暗記！47都道府県タイピング</h3>
+          <p>黄色くハイライトされた都道府県の名前をキーボードで打ってみよう！<br>
+            スピードと正確さの両方を意識するのが上達のコツ。<br>
+             繰り返し遊ぶことで「都道府県マスター」になれるかも！？
+          </p>
+      </div>  
+      <div class="ad-space">AD</div>
+    </div> <!-- right-panel 終わり -->
+
+  </div> <!-- ★main-layout 終わり -->
+</div> <!-- ★page-container 終わり -->
 
     
 
